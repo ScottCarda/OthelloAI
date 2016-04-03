@@ -69,6 +69,38 @@
 	)
 )
 
+( defun testgen ( state )
+	( let
+		(
+			( i 0 )
+			mark
+		)
+	
+		( if ( eq ( count 'X state ) ( count 'O state ) )
+			( setf mark 'X )
+			( setf mark 'O )
+		)
+
+		( lambda ()
+			( let ( succ )
+				( cond
+
+					( ( not i ) nil )
+
+					( ( setf i ( position 'E state :start i ) )
+						( setf succ ( copy-list state ) )
+						( setf ( nth i succ ) mark )
+						( incf i )
+						succ
+					)
+
+					( t nil )
+				)
+			)
+		)
+	)	
+)
+
 ( defun successors ( state )
 	( let ( ( succ-list nil ) succ mark )
 		( if ( eq ( count 'X state ) ( count 'O state ) )
@@ -109,3 +141,4 @@
 		)
 	)
 )
+
