@@ -1,4 +1,4 @@
-( load 'minimax )
+( load 'weiss-minimax )
 ( load 'tic-tac-toe )
 
 ( defun deepenough ( depth ) ( <= depth 0 ) )
