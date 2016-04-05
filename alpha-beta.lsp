@@ -1,4 +1,4 @@
-( load sample-state-search )
+( load 'sample-state-space )
 
 ( defun minimax ( state depth alpha beta )
     ( let
