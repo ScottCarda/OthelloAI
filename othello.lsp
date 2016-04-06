@@ -42,7 +42,119 @@
              ))
 |#
 
-             
+( defun get-start ()
+	'(
+		( nil nil nil nil nil nil nil nil )
+	        ( nil nil nil nil nil nil nil nil )
+	        ( nil nil nil nil nil nil nil nil )
+	        ( nil nil nil  W   B  nil nil nil )
+	        ( nil nil nil  B   W  nil nil nil )
+	        ( nil nil nil nil nil nil nil nil )
+	        ( nil nil nil nil nil nil nil nil )
+	        ( nil nil nil nil nil nil nil nil )
+	)
+)
+
+( defun get-sample ()
+	'(
+		( nil nil nil nil nil nil nil nil )
+	        ( nil nil nil nil  W  nil nil nil )
+	        ( nil nil nil  B   W   B  nil nil )
+	        ( nil nil nil  B   B  nil nil nil )
+	        ( nil nil nil  B   B   B  nil nil )
+	        ( nil nil nil nil nil nil nil nil )
+	        ( nil nil nil nil nil nil nil nil )
+	        ( nil nil nil nil nil nil nil nil )
+	)
+)
+
+
+( defmacro at ( state X Y )
+	`( nth ,X ( nth ,Y ,state ) )
+)
+
+( defun find-move ( state player )
+	( do
+		(
+			( i 0 ( 1+ i ) )
+			j
+
+			( succ-lst nil )
+			( other-player ( if ( eq player 'W ) 'B 'W ) )
+		)
+		( ( >= i 8 ) ( remove-duplicates succ-lst :test #'equal ) )
+
+		( setf j ( position player ( nth i state ) ) )
+
+		; Piece found @ state[i][j]
+		( when j
+
+			( format t "Found piece at ~D, ~D~%" i j )
+
+			; For each neighbor of state[i][j]
+			( do ( ( m -1 ( 1+ m ) ) ) ( ( >= m 2 ) nil )
+			( do ( ( n -1 ( 1+ n ) ) ) ( ( >= n 2 ) nil )
+			( if ( and ( zerop m ) ( zerop n ) ) ( continue ) )
+
+			( when ( eq ( at state ( + i m ) ( + j n ) ) other-player )
+				( format t "Walked from ~D, ~D to ~D, ~D~%" i j ( + i m ) ( + j n ) )
+				( setf succ-lst ( append succ-lst ( walk state ( + i m ) ( + j n ) m n ) ) )
+				;( format t "There~%" )
+			)
+
+			) )
+				
+		)
+	)
+)
+
+( defun walk ( state i j m n )
+	( do
+		(
+			( player ( at state i j ) )
+			( stop nil )
+			( return-pos nil )
+		)
+		( stop return-pos )
+	
+		( format t "Walked from ~D, ~D to " i j )
+
+		; Move current position acording to the direction
+		( setf i ( + i m ) )
+		( setf j ( + j n ) )
+
+		( format t "~D, ~D~%" i j )
+
+		( cond
+
+			; Out of bounds
+			( ( or ( < i 0 ) ( >= i 8 ) ( < j 0 ) ( >= j 8 ) )
+				( format t "Out of Bounds~%" )
+				( setf stop T )
+			)
+
+			; Another of the player's pieces
+			( ( eq ( at state i j ) player ) )
+
+			; Empty spot
+			( ( not ( at state i j ) )
+				( format t "Found move at ~D, ~D~%" i j )
+				( setf stop T )
+				( setf return-pos ( list ( list i j ) ) )
+			)
+
+			; Other player's piece
+			( t
+				( format t "Other player's piece~%" )
+				( setf stop T )
+			)
+
+		)
+	)
+)
+
+;))))))))
+#|            
 (setf game '(nil nil nil nil nil nil nil nil
              nil nil nil nil nil nil nil nil
              nil nil nil nil nil nil nil nil
@@ -51,8 +163,8 @@
              nil nil nil nil nil nil nil nil
              nil nil nil nil nil nil nil nil
              nil nil nil nil nil nil nil nil
-             ))
-             
+             )) 
+
 ( defun find-move ( state player )
     ( let
         (
@@ -161,7 +273,7 @@
         ( setf pos ( + pos dir ) )
     )
 )
-
+|#
 
 
 
