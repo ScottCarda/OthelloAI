@@ -263,14 +263,37 @@
 )
 
 ( defun walk-vert ( state pos player dir )
-    ( do ()
-        ( ( or
-            ( < pos 0 )
-            ( > pos 63 )
-            ( not ( eq ( nth pos state ) player ) )
-        ) nil )
+    ( let 
+        (
+            ( other-player ( if ( eq player W ) B W ) )
+        )    
+
+        ( do ()
+            ( ( or
+                ( < pos 0 )
+                ( > pos 63 )
+                ( not ( eq ( nth pos state ) player ) )
+            ) nil )
+            
+            ( setf pos ( + pos dir ) )
+        )
+
+        ( cond
         
-        ( setf pos ( + pos dir ) )
+            ; Stepped out of bounds
+            ( ( or
+                ( < pos 0)
+                ( > pos 63 )
+              )
+              nil
+            )
+            
+            ( ( eq ( nth pos state ) other-player )
+              nil
+            )
+            
+            ( t pos )
+        )
     )
 )
 |#
