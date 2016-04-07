@@ -45,62 +45,86 @@
 ( defun get-start ()
 	'(
 		( nil nil nil nil nil nil nil nil )
-	        ( nil nil nil nil nil nil nil nil )
-	        ( nil nil nil nil nil nil nil nil )
-	        ( nil nil nil  W   B  nil nil nil )
-	        ( nil nil nil  B   W  nil nil nil )
-	        ( nil nil nil nil nil nil nil nil )
-	        ( nil nil nil nil nil nil nil nil )
-	        ( nil nil nil nil nil nil nil nil )
+        ( nil nil nil nil nil nil nil nil )
+        ( nil nil nil nil nil nil nil nil )
+        ( nil nil nil  W   B  nil nil nil )
+        ( nil nil nil  B   W  nil nil nil )
+        ( nil nil nil nil nil nil nil nil )
+        ( nil nil nil nil nil nil nil nil )
+        ( nil nil nil nil nil nil nil nil )
 	)
 )
 
 ( defun get-sample ()
 	'(
-		( nil nil nil nil nil nil nil nil )
-	        ( nil nil nil nil  W  nil nil nil )
-	        ( nil nil nil  B   W   B  nil nil )
-	        ( nil nil nil  B   B  nil nil nil )
-	        ( nil nil nil  B   B   B  nil nil )
-	        ( nil nil nil nil nil nil nil nil )
-	        ( nil nil nil nil nil nil nil nil )
-	        ( nil nil nil nil nil nil nil nil )
+        ( nil nil  W   B  nil nil nil nil )
+        ( nil nil  W   W   W  nil nil nil )
+        ( nil nil nil  B   W   B  nil nil )
+        ( nil nil  W   B   B  nil nil nil )
+        ( nil nil nil  B   B   B  nil nil )
+        ( nil nil nil nil nil nil nil nil )
+        ( nil nil nil nil nil nil nil nil )
+        ( nil nil nil nil nil nil nil nil )
 	)
 )
 
+#|( defun get-sample ()
+	'(
+        ( 0  1  2  3  4  5  6  7  )
+        ( 8  9  10 11 12 13 14 15 )
+        ( 16 17 18 19 20 21 22 23 )
+        ( 24 25 26 27 28 29 30 31 )
+        ( 32 33 34 35 36 37 38 39 )
+        ( 40 41 42 43 44 45 46 47 )
+        ( 48 49 50 51 52 53 54 55 )
+        ( 56 57 58 59 60 61 62 63 )
+	)
+)|#
+
 
 ( defmacro at ( state X Y )
-	`( nth ,X ( nth ,Y ,state ) )
+	`( if ( and ( >= ,X 0 ) ( >= ,Y 0 ) )
+		( nth ,X ( nth ,Y ,state ) )
+	)
 )
 
 ( defun find-move ( state player )
 	( do
 		(
-			( i 0 ( 1+ i ) )
-			j
+			( y 0 ( 1+ y ) )
 
 			( succ-lst nil )
 			( other-player ( if ( eq player 'W ) 'B 'W ) )
 		)
-		( ( >= i 8 ) ( remove-duplicates succ-lst :test #'equal ) )
+		( ( >= y 8 ) ( remove-duplicates succ-lst :test #'equal ) )
 
-		( setf j ( position player ( nth i state ) ) )
+		( do
+			(
+				( x
+					( position player ( nth y state ) )
+					( position player ( nth y state ) :start ( 1+ x ) )
+				)
+			)
+			( ( not x ) nil )
 
-		; Piece found @ state[i][j]
-		( when j
+		;( setf x_coord ( position player ( nth y_coord state ) :start ( 1+ x_coord ) ) )
 
-			( format t "Found piece at ~D, ~D~%" i j )
+		; Piece found @ state[x_coord][y_coord]
+		;( when x_coord
+
+			( format t "Found piece at ~D, ~D~%" x y )
 
 			; For each neighbor of state[i][j]
 			( do ( ( m -1 ( 1+ m ) ) ) ( ( >= m 2 ) nil )
 			( do ( ( n -1 ( 1+ n ) ) ) ( ( >= n 2 ) nil )
-			( if ( and ( zerop m ) ( zerop n ) ) ( continue ) )
+			
+				( if ( and ( zerop m ) ( zerop n ) ) ( continue ) )
 
-			( when ( eq ( at state ( + i m ) ( + j n ) ) other-player )
-				( format t "Walked from ~D, ~D to ~D, ~D~%" i j ( + i m ) ( + j n ) )
-				( setf succ-lst ( append succ-lst ( walk state ( + i m ) ( + j n ) m n ) ) )
-				;( format t "There~%" )
-			)
+				( when ( eq ( at state ( + x m ) ( + y n ) ) other-player )
+					( format t "Walked from ~D, ~D to ~D, ~D~%" x y ( + x m ) ( + y n ) )
+					( setf succ-lst ( append succ-lst ( walk state ( + x m ) ( + y n ) m n ) ) )
+					;( format t "There~%" )
+				)
 
 			) )
 				
@@ -108,39 +132,39 @@
 	)
 )
 
-( defun walk ( state i j m n )
+( defun walk ( state x y m n )
 	( do
 		(
-			( player ( at state i j ) )
+			( player ( at state x y ) )
 			( stop nil )
 			( return-pos nil )
 		)
 		( stop return-pos )
 	
-		( format t "Walked from ~D, ~D to " i j )
+		( format t "Walked from ~D, ~D to " x y )
 
 		; Move current position acording to the direction
-		( setf i ( + i m ) )
-		( setf j ( + j n ) )
+		( setf x ( + x m ) )
+		( setf y ( + y n ) )
 
-		( format t "~D, ~D~%" i j )
+		( format t "~D, ~D~%" x y )
 
 		( cond
 
 			; Out of bounds
-			( ( or ( < i 0 ) ( >= i 8 ) ( < j 0 ) ( >= j 8 ) )
+			( ( or ( < x 0 ) ( >= x 8 ) ( < y 0 ) ( >= y 8 ) )
 				( format t "Out of Bounds~%" )
 				( setf stop T )
 			)
 
 			; Another of the player's pieces
-			( ( eq ( at state i j ) player ) )
+			( ( eq ( at state x y ) player ) )
 
 			; Empty spot
-			( ( not ( at state i j ) )
-				( format t "Found move at ~D, ~D~%" i j )
+			( ( not ( at state x y ) )
+				( format t "Found move at ~D, ~D~%" x y )
 				( setf stop T )
-				( setf return-pos ( list ( list i j ) ) )
+				( setf return-pos ( list ( list x y ) ) )
 			)
 
 			; Other player's piece
