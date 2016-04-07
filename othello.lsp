@@ -243,5 +243,19 @@
 )
 
 
+( defun flip-tiles ( state path ) 
 
+    ( let (
+            player
+            ( newState ( mapcar #'copy-list state ) )
+          )
 
+        ( dolist ( tile path newState ) 
+            ( setf player ( at newState ( car tile ) ( cadr tile ) ) )
+
+            ( setf player ( if ( eq player 'W ) 'B 'W ) )
+
+            ( setf ( nth ( car tile ) ( nth ( cadr tile ) newState ) ) player )
+        )
+    )
+)
