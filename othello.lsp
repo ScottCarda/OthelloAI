@@ -109,6 +109,7 @@
 )
 
 ( defun find-move ( state player )
+    ; Looping througth the rows of the state
 	( do
 		(
 			( y 0 ( 1+ y ) )
@@ -118,6 +119,7 @@
 		)
 		( ( >= y 8 ) ( remove-duplicates succ-lst :test #'equal ) )
 
+        ; Looping through the columns of the state
 		( do
 			(
 				( x
@@ -138,8 +140,10 @@
 			( do ( ( m -1 ( 1+ m ) ) ) ( ( >= m 2 ) nil )
 			( do ( ( n -1 ( 1+ n ) ) ) ( ( >= n 2 ) nil )
 			
+			    ; Skip current position
 				( if ( and ( zerop m ) ( zerop n ) ) ( continue ) )
 
+                ; When a neighbor is the other player's piece
 				( when ( eq ( at state ( + x m ) ( + y n ) ) other-player )
 					( format t "Walked from ~D, ~D to ~D, ~D~%" x y ( + x m ) ( + y n ) )
 					( setf succ-lst ( append succ-lst ( walk state ( + x m ) ( + y n ) m n ) ) )
