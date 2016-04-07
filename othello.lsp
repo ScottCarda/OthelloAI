@@ -77,11 +77,11 @@
 
 ( defun get-sample ()
 	'(
-        ( nil nil  W   B  nil nil nil nil )
-        ( nil nil  W   W   W  nil nil nil )
-        ( nil nil nil  B   W   B  nil nil )
-        ( nil nil  W   B   B  nil nil nil )
-        ( nil nil nil  B   B   B  nil nil )
+        ( nil nil  B   B   B   B   B  nil )
+        ( nil nil  B   W   W   W   B  nil )
+        ( nil nil  B   W  nil  W   B  nil )
+        ( nil nil  B   W   W   W   B  nil )
+        ( nil nil  B   B   B   B   B  nil )
         ( nil nil nil nil nil nil nil nil )
         ( nil nil nil nil nil nil nil nil )
         ( nil nil nil nil nil nil nil nil )
@@ -117,8 +117,7 @@
 			( succ-lst nil )
 			( other-player ( if ( eq player 'W ) 'B 'W ) )
 		)
-		( ( >= y 8 ) ( remove-duplicates succ-lst :test #'equal ) )
-
+		( ( >= y 8 ) ( merge-path succ-lst ) )
         ; Looping through the columns of the state
 		( do
 			(
@@ -145,8 +144,12 @@
 
                 ; When a neighbor is the other player's piece
 				( when ( eq ( at state ( + x m ) ( + y n ) ) other-player )
-					( format t "Walked from ~D, ~D to ~D, ~D~%" x y ( + x m ) ( + y n ) )
-					( setf succ-lst ( append succ-lst ( walk state ( + x m ) ( + y n ) m n ) ) )
+					; ( format t "Walked from ~D, ~D to ~D, ~D~%" x y ( + x m ) ( + y n ) )
+                    (setf err ( walk state ( + x m ) ( + y n ) m n ) )
+
+                    (if err 
+                        ( setf succ-lst ( cons err succ-lst ) )
+                    )
 					;( format t "There~%" )
 				)
 
@@ -162,16 +165,20 @@
 			( player ( at state x y ) )
 			( stop nil )
 			( return-pos nil )
+            ( path nil)
 		)
 		( stop return-pos )
 	
-		( format t "Walked from ~D, ~D to " x y )
+        ( setf path ( cons ( list x y )  path ) )
+        ; ( format t "Path: ~a~%" path )
+
+		; ( format t "Walked from ~D, ~D to " x y )
 
 		; Move current position acording to the direction
 		( setf x ( + x m ) )
 		( setf y ( + y n ) )
 
-		( format t "~D, ~D~%" x y )
+		; ( format t "~D, ~D~%" x y )
 
 		( cond
 
@@ -188,7 +195,8 @@
 			( ( not ( at state x y ) )
 				( format t "Found move at ~D, ~D~%" x y )
 				( setf stop T )
-				( setf return-pos ( list ( list x y ) ) )
+				( setf return-pos ( list ( list x y ) path ) )
+                ; ( format t "~a~%" return-pos )
 			)
 
 			; Other player's piece
@@ -200,6 +208,42 @@
 		)
 	)
 )
+
+( defun merge-path ( succ-lst ) 
+
+    (let (
+            ( return-lst nil )
+            in-lst
+            ( move-lst ( copy-list succ-lst ) )
+         )
+        ( dolist ( move move-lst return-lst )
+            ; checks if move is already in the return-lst
+            ( setf in-lst ( car ( member move return-lst :test 
+                #'( lambda ( m1 m2 ) ( equal ( car m1 ) ( car m2 ) ) 
+                  ) 
+            ) ) )
+
+            ; ( format t "Return-lst: ~a~%" return-lst)
+
+            ( cond 
+                ( ( null in-lst ) 
+                    ( setf return-lst ( cons move return-lst ) )
+                )
+
+                (t 
+                    ; ( format t "Before: ~a~%" ( nth 1 in-lst ) )
+                    ; ( format t "Move: ~a~%" ( nth 1 move ) ) 
+                    ( setf ( nth 1 in-lst ) ( append ( nth 1 move ) ( nth 1 in-lst ) ) )
+                    ; ( format t "After: ~a~%" ( nth 1 in-lst ) )
+
+                )
+            )
+        )
+    )
+)
+
+
+
 
 ;))))))))
 #|            
