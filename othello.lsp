@@ -6,27 +6,47 @@
 
 
 
-(defun othello ()
+(defun othello (&optional player)
 
-    (let ((input) (move))
-        (princ "Would you like to move first [y/n]? ")
-        (setf input (read))
+    (let (
+            (input nil) 
+            (playerStart)
+         )
+        (cond 
+            
+            ((null player)
 
-        (cond
+                (loop while (and (not (eq input 'Y)) (not (eq input 'N))) do
+                    (princ "Would you like to move first [y/n]? ")
+                    (setf input (read))
+                )
 
-            ((string= input "Y")
-                (format t "OK! You will be playing Black. When asked for your move, please enter the row and column in which you would like to place a Black stone. Remember, you must outflank at least one White stone, or forfeit your move.~%~%")
+                (if (eq input 'Y)
+                    (setf playerStart "black")
+                    (setf playerStart "white")
+                )
             )
-            ((string= input "N")
-                (format t "OK! You will be playing White. When asked for your move, please enter the row and column in which you would like to place a White stone. Remember, you must outflank at least one Black stone, or forfeit your move.~%~%")
+
+            ((eq player 'black)
+                (setf playerStart "black")
             )
 
-            (t
-                (format t "Please enter either y or n.~%")
-                (othello)
+            ((eq player 'white)
+                (setf playerStart "white")
             )
         )
-        (printBoard game)
+        
+        (cond 
+            ((string= playerStart "black")
+                (format t "OK! You will be playing Black. When asked for your move, please enter the row and column in which you would like to place a Black stone. Remember, you must outflank at least one White stone, or forfeit your move.~%~%")
+            )
+
+            ((string= playerStart "white")
+                (format t "OK! You will be playing White. When asked for your move, please enter the row and column in which you would like to place a White stone. Remember, you must outflank at least one Black stone, or forfeit your move.~%~%")
+            )    
+        )
+
+        (printBoard (get-start))
     )
 )
 
