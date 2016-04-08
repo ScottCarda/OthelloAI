@@ -4,8 +4,6 @@
 
 (load 'print.lsp)
 
-
-
 (defun othello (&optional player)
 
     (let (
@@ -46,7 +44,7 @@
             )    
         )
 
-        (printBoard (get-start))
+        ; (printBoard (get-start))
     )
 )
 
@@ -80,8 +78,7 @@
     )
 ) |#
 
-( defun get-start ( ) 
-
+(defun get-start () 
     '(
             ( nil nil nil nil nil nil nil nil )
             ( nil nil nil nil nil nil nil nil )
@@ -91,10 +88,9 @@
             ( nil nil nil nil nil nil nil nil )
             ( nil nil nil nil nil nil nil nil )
             ( nil nil nil nil nil nil nil nil )
-        )
-
+    )
 )
-
+ 
 ( defun get-sample ()
 	'(
         ( nil nil nil nil nil nil  W  nil )
@@ -359,4 +355,19 @@
             ( setf ( at newState ( car tile ) ( cadr tile ) ) player )
         )
     )
+)
+
+( if ( = ( length *args* ) 1 )
+    ( cond 
+        ( ( string-equal ( car *args* ) "black" )
+            ( othello 'black )
+        )
+        ( ( string-equal ( car *args* ) "white" ) 
+            ( othello 'white )
+        )
+        ( t 
+            (format t "Command Line Usage: clisp othello.lsp player (black or white)~%")
+        )
+    )
+
 )
