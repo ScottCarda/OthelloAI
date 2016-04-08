@@ -52,3 +52,18 @@
 )
 
 )
+
+( load 'alpha-beta )
+
+( defun run-minimax ( state depth )
+    
+    ( minimax
+        state
+        depth
+        nil
+        nil
+        #'successors
+        #'eval-state
+    )
+
+)

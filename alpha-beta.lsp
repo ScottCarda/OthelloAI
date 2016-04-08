@@ -1,9 +1,9 @@
-( load 'sample-state-space )
+;( load 'sample-state-space )
 
-( defun minimax ( state depth alpha beta )
+( defun minimax ( state depth alpha beta successors eval-state )
     ( let
         (
-            ( get-next ( successors state ) )
+            ( get-next ( funcall successors state ) )
             succ
             best
             succ-val
@@ -14,7 +14,7 @@
 	    ( cond 
 	    
 	        ( ( or ( <= depth 0 ) ( not succ ) )
-	            ( let ( ( val ( eval-state state ) ) )
+	            ( let ( ( val ( funcall eval-state state ) ) )
                 ( format t "~A:~%" state )
 	            ( format t "    ~D~%" val )
 	            ( format t "    Leaf~%~%" )
@@ -25,7 +25,7 @@
 	        
 	        ( t
 	            ; Process first successor
-	            ( setf succ-val ( minimax succ ( 1- depth ) beta alpha ) )
+	            ( setf succ-val ( minimax succ ( 1- depth ) beta alpha successors eval-state ) )
 	            ; Change sign to reflect the change in player
                 ( setf ( car succ-val ) ( - ( car succ-val ) ) )
 	            ; Set best as first successor
@@ -57,8 +57,8 @@
                             ( < beta ( car best ) )
 	                    )
 	                    
-                        ( setf succ-val ( minimax succ ( 1- depth ) ( car best ) alpha ) )
-	                    ( setf succ-val ( minimax succ ( 1- depth ) beta alpha ) )
+                        ( setf succ-val ( minimax succ ( 1- depth ) ( car best ) alpha successors eval-state ) )
+	                    ( setf succ-val ( minimax succ ( 1- depth ) beta alpha successors eval-state ) )
                     )
                     
                     ; Change sign to reflect the change in player

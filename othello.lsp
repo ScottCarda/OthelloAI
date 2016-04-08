@@ -97,12 +97,12 @@
 
 ( defun get-sample ()
 	'(
-        ( nil nil  B   B   B   B   B  nil )
-        ( nil nil  B   W   W   W   B  nil )
-        ( nil nil  B   W  nil  W   B  nil )
-        ( nil nil  B   W   W   W   B  nil )
-        ( nil nil  B   B   B   B   B  nil )
-        ( nil nil nil nil nil nil nil nil )
+        ( nil nil nil nil nil nil  W  nil )
+        ( nil nil nil nil  B   W  nil nil )
+        ( nil nil nil nil  B  nil nil nil )
+        ( nil  W   W   B   B  nil nil nil )
+        ( nil nil  B   B   B   B  nil nil )
+        ( nil nil nil  W  nil nil nil nil )
         ( nil nil nil nil nil nil nil nil )
         ( nil nil nil nil nil nil nil nil )
 	)
@@ -122,23 +122,41 @@
 )|#
 
 
-( defmacro at ( state X Y )
+#|( defmacro at ( state X Y )
 	`( if ( and ( >= ,X 0 ) ( >= ,Y 0 ) )
 		( nth ,X ( nth ,Y ,state ) )
 	)
-)
+)|#
 
-( defmacro setter ( state X Y )
+( defmacro at ( state X Y )
     `( nth ,X ( nth ,Y ,state ) )
 )
 
-(defun test ( state ) 
-
-    ( mapcar #'printBoard ( gen-successors state 'B ) )
+( defun test ( state player )
+    ( let
+        (
+            ( successors ( gen-successors state player ) )
+            ( succ nil )
+        )
+        
+        ( setf succ ( funcall successors ) )
+        
+        ( do ()
+            ( ( not succ ) nil )
+            
+            ( printBoard succ )
+            
+            ( setf succ ( funcall successors ) )
+            
+        )
+        
+        ;( mapcar #'printBoard ( gen-successors state 'B ) )
+    )
+    ( values )
 )
 
 ( defun move-to-state ( state move player ) 
-    (let  (
+    ( let  (
             ( path ( cadr move ) )
             ( pos ( car move ) )
             newState
@@ -147,7 +165,7 @@
         ( setf newState ( flip-tiles state path ) )
 
         ( setf
-            ( setter
+            ( at
                 newState 
                 ( car pos ) 
                 ( cadr pos )
@@ -158,10 +176,32 @@
     )
 )
 
+#|
 ( defun gen-successors ( state player ) 
 
     ( mapcar #'( lambda ( move ) ( move-to-state state move player ) )
         ( find-move state player )
+    )
+)
+|#
+
+( defun gen-successors ( state player ) 
+    ( let
+        (
+            ( move-lst ( find-move state player ) )
+            ( i -1 )
+            max-i
+        )
+        
+        ( setf max-i ( - ( length move-lst ) 1 ) )
+        
+        ( lambda ()
+            ( when ( < i max-i )
+                ( incf i )
+                ( move-to-state state ( nth i move-lst ) player )
+            )
+        )
+            ; ( find-move state player )
     )
 )
 
@@ -196,22 +236,25 @@
 			( do ( ( m -1 ( 1+ m ) ) ) ( ( >= m 2 ) nil )
 			( do ( ( n -1 ( 1+ n ) ) ) ( ( >= n 2 ) nil )
 			
-			    ; Skip current position
-				( if ( and ( zerop m ) ( zerop n ) ) ( continue ) )
+			    ( when
+			        ( and
+			            ;( not ( and ( zerop m ) ( zerop n ) ) )
+			            ; Skip out-of-bounds positions
+			            ( >= ( + x m ) 0 ) ( >= ( + y n ) 0 )
+			            ; When a neighbor is the other player's piece
+			            ( eq ( at state ( + x m ) ( + y n ) ) other-player )
+		            )
 
-                ; When a neighbor is the other player's piece
-				( when ( eq ( at state ( + x m ) ( + y n ) ) other-player )
-					; ( format t "Walked from ~D, ~D to ~D, ~D~%" x y ( + x m ) ( + y n ) )
+				    ( format t "Walked from ~D, ~D to ~D, ~D~%" x y ( + x m ) ( + y n ) )
                     (setf err ( walk state ( + x m ) ( + y n ) m n ) )
 
                     (if err 
                         ( setf succ-lst ( cons err succ-lst ) )
                     )
-					;( format t "There~%" )
-				)
-
+				    ;( format t "There~%" )
+			    )
+			    
 			) )
-				
 		)
 	)
 )
@@ -229,13 +272,13 @@
         ( setf path ( cons ( list x y )  path ) )
         ; ( format t "Path: ~a~%" path )
 
-		; ( format t "Walked from ~D, ~D to " x y )
+		( format t "Walked from ~D, ~D to " x y )
 
 		; Move current position acording to the direction
 		( setf x ( + x m ) )
 		( setf y ( + y n ) )
 
-		; ( format t "~D, ~D~%" x y )
+		( format t "~D, ~D~%" x y )
 
 		( cond
 
@@ -312,7 +355,8 @@
 
             ( setf player ( if ( eq player 'W ) 'B 'W ) )
 
-            ( setf ( nth ( car tile ) ( nth ( cadr tile ) newState ) ) player )
+            ;( setf ( nth ( car tile ) ( nth ( cadr tile ) newState ) ) player )
+            ( setf ( at newState ( car tile ) ( cadr tile ) ) player )
         )
     )
 )
