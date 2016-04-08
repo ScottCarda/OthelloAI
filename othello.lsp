@@ -62,17 +62,37 @@
              ))
 |#
 
-( defun get-start ()
-	'(
-		( nil nil nil nil nil nil nil nil )
-        ( nil nil nil nil nil nil nil nil )
-        ( nil nil nil nil nil nil nil nil )
-        ( nil nil nil  W   B  nil nil nil )
-        ( nil nil nil  B   W  nil nil nil )
-        ( nil nil nil nil nil nil nil nil )
-        ( nil nil nil nil nil nil nil nil )
-        ( nil nil nil nil nil nil nil nil )
-	)
+( defstruct state board player )
+
+#| ( defun get-start ()
+	( make-state 
+        :board '(
+    		( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil  W   B  nil nil nil )
+            ( nil nil nil  B   W  nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+	    )
+        :player 'B
+    )
+) |#
+
+( defun get-start ( ) 
+
+    '(
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil  W   B  nil nil nil )
+            ( nil nil nil  B   W  nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+        )
+
 )
 
 ( defun get-sample ()
@@ -106,6 +126,43 @@
 	`( if ( and ( >= ,X 0 ) ( >= ,Y 0 ) )
 		( nth ,X ( nth ,Y ,state ) )
 	)
+)
+
+( defmacro setter ( state X Y )
+    `( nth ,X ( nth ,Y ,state ) )
+)
+
+(defun test ( state ) 
+
+    ( mapcar #'printBoard ( gen-successors state 'B ) )
+)
+
+( defun move-to-state ( state move player ) 
+    (let  (
+            ( path ( cadr move ) )
+            ( pos ( car move ) )
+            newState
+          )
+
+        ( setf newState ( flip-tiles state path ) )
+
+        ( setf
+            ( setter
+                newState 
+                ( car pos ) 
+                ( cadr pos )
+            )
+            player
+        ) 
+        newState
+    )
+)
+
+( defun gen-successors ( state player ) 
+
+    ( mapcar #'( lambda ( move ) ( move-to-state state move player ) )
+        ( find-move state player )
+    )
 )
 
 ( defun find-move ( state player )
