@@ -4,8 +4,6 @@
 
 (load 'print.lsp)
 
-
-
 (defun othello (&optional player)
 
     (let (
@@ -46,7 +44,7 @@
             )    
         )
 
-        (printBoard (get-start))
+        ; (printBoard (get-start))
     )
 )
 
@@ -80,8 +78,7 @@
     )
 ) |#
 
-( defun get-start ( ) 
-
+(defun get-start () 
     '(
             ( nil nil nil nil nil nil nil nil )
             ( nil nil nil nil nil nil nil nil )
@@ -91,36 +88,24 @@
             ( nil nil nil nil nil nil nil nil )
             ( nil nil nil nil nil nil nil nil )
             ( nil nil nil nil nil nil nil nil )
-        )
-
+    )
 )
-
+ 
 ( defun get-sample ()
-	'(
-        ( nil nil  B   B   B   B   B  nil )
-        ( nil nil  B   W   W   W   B  nil )
-        ( nil nil  B   W  nil  W   B  nil )
-        ( nil nil  B   W   W   W   B  nil )
-        ( nil nil  B   B   B   B   B  nil )
-        ( nil nil nil nil nil nil nil nil )
-        ( nil nil nil nil nil nil nil nil )
-        ( nil nil nil nil nil nil nil nil )
-	)
+	(make-state
+        :board '(
+            ( nil nil  B   B   B   B   B  nil )
+            ( nil nil  B   W   W   W   B  nil )
+            ( nil nil  B   W  nil  W   B  nil )
+            ( nil nil  B   W   W   W   B  nil )
+            ( nil nil  B   B   B   B   B  nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+            ( nil nil nil nil nil nil nil nil )
+	       )
+        :player 'B
+    )
 )
-
-#|( defun get-sample ()
-	'(
-        ( 0  1  2  3  4  5  6  7  )
-        ( 8  9  10 11 12 13 14 15 )
-        ( 16 17 18 19 20 21 22 23 )
-        ( 24 25 26 27 28 29 30 31 )
-        ( 32 33 34 35 36 37 38 39 )
-        ( 40 41 42 43 44 45 46 47 )
-        ( 48 49 50 51 52 53 54 55 )
-        ( 56 57 58 59 60 61 62 63 )
-	)
-)|#
-
 
 ( defmacro at ( state X Y )
 	`( if ( and ( >= ,X 0 ) ( >= ,Y 0 ) )
@@ -129,6 +114,7 @@
 )
 
 ( defmacro setter ( state X Y )
+   
     `( nth ,X ( nth ,Y ,state ) )
 )
 
@@ -315,4 +301,19 @@
             ( setf ( nth ( car tile ) ( nth ( cadr tile ) newState ) ) player )
         )
     )
+)
+
+( if ( = ( length *args* ) 1 )
+    ( cond 
+        ( ( string-equal ( car *args* ) "black" )
+            ( othello 'black )
+        )
+        ( ( string-equal ( car *args* ) "white" ) 
+            ( othello 'white )
+        )
+        ( t 
+            (format t "Command Line Usage: clisp othello.lsp player (black or white)~%")
+        )
+    )
+
 )
