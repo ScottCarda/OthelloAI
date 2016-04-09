@@ -2,49 +2,50 @@
     othello.lsp
 |#
 
-(load 'print.lsp)
+( load 'print.lsp )
 
-(defun othello (&optional player)
+( defun othello ( &optional player )
 
-    (let (
-            (input nil) 
-            (playerStart)
+    ( let (
+            ( input nil ) 
+            playerStart
          )
-        (cond 
+        ( cond 
             
-            ((null player)
+            ( ( null player )
 
-                (loop while (and (not (eq input 'Y)) (not (eq input 'N))) do
-                    (princ "Would you like to move first [y/n]? ")
-                    (setf input (read))
+                ( loop while 
+                    ( and ( not ( eq input 'Y ) ) ( not ( eq input 'N ) ) ) do
+                    ( princ "Would you like to move first [y/n]? " )
+                    ( setf input ( read ) )
                 )
 
-                (if (eq input 'Y)
-                    (setf playerStart "black")
-                    (setf playerStart "white")
+                ( if ( eq input 'Y )
+                    ( setf playerStart "black" )
+                    ( setf playerStart "white" )
                 )
             )
 
-            ((eq player 'black)
-                (setf playerStart "black")
+            ( ( eq player 'black )
+                ( setf playerStart "black" )
             )
 
-            ((eq player 'white)
-                (setf playerStart "white")
+            ( ( eq player 'white )
+                ( setf playerStart "white" )
             )
         )
         
-        (cond 
-            ((string= playerStart "black")
-                (format t "OK! You will be playing Black. When asked for your move, please enter the row and column in which you would like to place a Black stone. Remember, you must outflank at least one White stone, or forfeit your move.~%~%")
+        ( cond 
+            ( ( string= playerStart "black" )
+                ( format t "OK! You will be playing Black. When asked for your move, please enter the row and column in which you would like to place a Black stone. Remember, you must outflank at least one White stone, or forfeit your move.~%~%" )
             )
 
-            ((string= playerStart "white")
-                (format t "OK! You will be playing White. When asked for your move, please enter the row and column in which you would like to place a White stone. Remember, you must outflank at least one Black stone, or forfeit your move.~%~%")
+            ( ( string= playerStart "white" )
+                ( format t "OK! You will be playing White. When asked for your move, please enter the row and column in which you would like to place a White stone. Remember, you must outflank at least one Black stone, or forfeit your move.~%~%" )
             )    
         )
 
-        ; (printBoard (get-start))
+        ( printBoard ( struct-board ( get-start ) ) )
     )
 )
 
@@ -60,10 +61,10 @@
              ))
 |#
 
-( defstruct state board player )
+( defstruct struct board player )
 
-#| ( defun get-start ()
-	( make-state 
+( defun get-start ()
+	( make-struct 
         :board '(
     		( nil nil nil nil nil nil nil nil )
             ( nil nil nil nil nil nil nil nil )
@@ -76,9 +77,9 @@
 	    )
         :player 'B
     )
-) |#
+)
 
-(defun get-start () 
+#| (defun get-start () 
     '(
             ( nil nil nil nil nil nil nil nil )
             ( nil nil nil nil nil nil nil nil )
@@ -89,7 +90,7 @@
             ( nil nil nil nil nil nil nil nil )
             ( nil nil nil nil nil nil nil nil )
     )
-)
+) |#
  
 ( defun get-sample ()
 	'(
@@ -128,10 +129,10 @@
     `( nth ,X ( nth ,Y ,state ) )
 )
 
-( defun test ( state player )
+( defun test ( state )
     ( let
         (
-            ( successors ( gen-successors state player ) )
+            ( successors ( gen-successors state ) )
             ( succ nil )
         )
         
@@ -151,14 +152,14 @@
     ( values )
 )
 
-( defun move-to-state ( state move player ) 
+( defun move-to-state ( state move ) 
     ( let  (
             ( path ( cadr move ) )
             ( pos ( car move ) )
             newState
           )
 
-        ( setf newState ( flip-tiles state path ) )
+        ( setf newState ( flip-tiles ( struct-board state ) path ) )
 
         ( setf
             ( at
@@ -166,7 +167,7 @@
                 ( car pos ) 
                 ( cadr pos )
             )
-            player
+            ( struct-player state )
         ) 
         newState
     )
@@ -181,10 +182,10 @@
 )
 |#
 
-( defun gen-successors ( state player ) 
+( defun gen-successors ( state ) 
     ( let
         (
-            ( move-lst ( find-move state player ) )
+            ( move-lst ( find-move state ) )
             ( i -1 )
             max-i
         )
@@ -194,29 +195,29 @@
         ( lambda ()
             ( when ( < i max-i )
                 ( incf i )
-                ( move-to-state state ( nth i move-lst ) player )
+                ( move-to-state state ( nth i move-lst )  )
             )
         )
             ; ( find-move state player )
     )
 )
 
-( defun find-move ( state player )
+( defun find-move ( state )
     ; Looping througth the rows of the state
 	( do
 		(
 			( y 0 ( 1+ y ) )
 
 			( succ-lst nil )
-			( other-player ( if ( eq player 'W ) 'B 'W ) )
+			( other-player ( if ( eq ( struct-player state ) 'W ) 'B 'W ) )
 		)
 		( ( >= y 8 ) ( merge-path succ-lst ) )
         ; Looping through the columns of the state
 		( do
 			(
 				( x
-					( position player ( nth y state ) )
-					( position player ( nth y state ) :start ( 1+ x ) )
+					( position ( struct-player state ) ( nth y ( struct-board state ) ) )
+					( position ( struct-player state ) ( nth y ( struct-board state ) ) :start ( 1+ x ) )
 				)
 			)
 			( ( not x ) nil )
@@ -238,11 +239,11 @@
 			            ; Skip out-of-bounds positions
 			            ( >= ( + x m ) 0 ) ( >= ( + y n ) 0 )
 			            ; When a neighbor is the other player's piece
-			            ( eq ( at state ( + x m ) ( + y n ) ) other-player )
+			            ( eq ( at ( struct-board state ) ( + x m ) ( + y n ) ) other-player )
 		            )
 
 				    ( format t "Walked from ~D, ~D to ~D, ~D~%" x y ( + x m ) ( + y n ) )
-                    (setf err ( walk state ( + x m ) ( + y n ) m n ) )
+                    (setf err ( walk ( struct-board state ) ( + x m ) ( + y n ) m n ) )
 
                     (if err 
                         ( setf succ-lst ( cons err succ-lst ) )
