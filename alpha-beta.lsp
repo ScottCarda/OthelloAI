@@ -1,5 +1,16 @@
 ;( load 'sample-state-space )
 
+( defun alpha-beta ( state depth successors eval-state )
+    ( cadr ( minimax
+        state
+        depth
+        nil
+        nil
+        successors
+        eval-state
+    ) )
+)
+
 ( defun minimax ( state depth alpha beta successors eval-state )
     ( let
         (
@@ -9,15 +20,17 @@
             succ-val
         )
 
-        ( setf succ ( funcall get-next ) )
+        ( if ( > depth 0 )
+            ( setf succ ( funcall get-next ) )
+        )
 
 	    ( cond 
 	    
 	        ( ( or ( <= depth 0 ) ( not succ ) )
 	            ( let ( ( val ( funcall eval-state state ) ) )
-                ( format t "~A:~%" state )
-	            ( format t "    ~D~%" val )
-	            ( format t "    Leaf~%~%" )
+;               ( format t "~A:~%" state )
+;	            ( format t "    ~D~%" val )
+;	            ( format t "    Leaf~%~%" )
 	            ( list val )
 	            )
 	            ;( list ( eval-state state ) nil )
@@ -31,9 +44,9 @@
 	            ; Set best as first successor
 	            ( setf best ( list ( car succ-val ) succ ) )
 
-                ( format t "~A:~%" state )
-	            ( format t "    ~D~%" ( car best ) )
-	            ( format t "    ~A~%~%" ( cadr best ) )
+;               ( format t "~A:~%" state )
+;	            ( format t "    ~D~%" ( car best ) )
+;	            ( format t "    ~A~%~%" ( cadr best ) )
 	            
 	            ( do ()
 	                (
@@ -42,11 +55,11 @@
 	                        ( not ( setf succ ( funcall get-next ) ) ) ; End of successors
                         )
                         
-                        ( if ( and alpha ( <= ( - ( car best ) ) alpha ) ) ; Prune condition
-                            ( format t "Pruned!~%~%" )
-                        )
+;                        ( if ( and alpha ( <= ( - ( car best ) ) alpha ) ) ; Prune condition
+;                           ( format t "Pruned!~%~%" )
+;                        )
                         
-                        ( format t "Done with children of ~A.~%~%" state )
+;                       ( format t "Done with children of ~A.~%~%" state )
                         
                         best
                     )
@@ -69,9 +82,9 @@
                         ( setf best ( list ( car succ-val ) succ ) )
                     )
                     
-                    ( format t "~A:~%" state )
-	                ( format t "    ~D~%" ( car best ) )
-	                ( format t "    ~A~%~%" ( cadr best ) )
+;                   ( format t "~A:~%" state )
+;	                ( format t "    ~D~%" ( car best ) )
+;	                ( format t "    ~A~%~%" ( cadr best ) )
                 
 	            )
             )

@@ -2,7 +2,9 @@
     othello.lsp
 |#
 
-( load 'print.lsp )
+( load 'print )
+( load 'heuristics )
+( load 'alpha-beta )
 
 ( defun othello ( &optional player )
 
@@ -45,94 +47,157 @@
             )    
         )
 
-        ( printBoard ( struct-board ( get-start ) ) )
+        ( printBoard ( state-board ( get-start ) ) )
     )
 )
 
-
-#|(setf game '((nil nil nil nil nil nil nil nil) 
-             (nil nil nil nil nil nil nil nil) 
-             (nil nil nil nil nil nil nil nil) 
-             (nil nil nil W B nil nil nil) 
-             (nil nil nil B W nil nil nil) 
-             (nil nil nil nil nil nil nil nil) 
-             (nil nil nil nil nil nil nil nil) 
-             (nil nil nil nil nil nil nil nil)
-             ))
-|#
-
-( defstruct struct board player )
+( defstruct state board player moves creationMove )
 
 ( defun get-start ()
-	( make-struct 
-        :board '(
-    		( nil nil nil nil nil nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-            ( nil nil nil  W   B  nil nil nil )
-            ( nil nil nil  B   W  nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-	    )
-        :player 'B
-    )
-)
-
-#| (defun get-start () 
-    '(
-            ( nil nil nil nil nil nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-            ( nil nil nil  W   B  nil nil nil )
-            ( nil nil nil  B   W  nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-            ( nil nil nil nil nil nil nil nil )
-    )
-) |#
- 
-( defun get-sample ()
-	'(
-        ( nil nil nil nil nil nil  W  nil )
-        ( nil nil nil nil  B   W  nil nil )
-        ( nil nil nil nil  B  nil nil nil )
-        ( nil  W   W   B   B  nil nil nil )
-        ( nil nil  B   B   B   B  nil nil )
-        ( nil nil nil  W  nil nil nil nil )
-        ( nil nil nil nil nil nil nil nil )
-        ( nil nil nil nil nil nil nil nil )
-	)
-)
-
-#|( defun get-sample ()
-	'(
-        ( 0  1  2  3  4  5  6  7  )
-        ( 8  9  10 11 12 13 14 15 )
-        ( 16 17 18 19 20 21 22 23 )
-        ( 24 25 26 27 28 29 30 31 )
-        ( 32 33 34 35 36 37 38 39 )
-        ( 40 41 42 43 44 45 46 47 )
-        ( 48 49 50 51 52 53 54 55 )
-        ( 56 57 58 59 60 61 62 63 )
-	)
-)|#
-
-
-#|( defmacro at ( state X Y )
-	`( if ( and ( >= ,X 0 ) ( >= ,Y 0 ) )
-		( nth ,X ( nth ,Y ,state ) )
-	)
-)|#
-
-( defmacro at ( state X Y )
-    `( nth ,X ( nth ,Y ,state ) )
-)
-
-( defun test ( state )
     ( let
         (
-            ( successors ( gen-successors state ) )
+            ( board
+                '(
+                ( nil nil nil nil nil nil nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                ( nil nil nil  W   B  nil nil nil )
+                ( nil nil nil  B   W  nil nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                )
+            )
+            ( player 'B )
+        )
+	    ( make-state 
+            :board board
+            :player player
+            :moves ( find-move board player )
+            :creationMove nil
+        )
+    )
+)
+ 
+( defun get-sample ()
+    ( let
+        (
+            ( board
+#|
+                '(
+                (  B   B   B   B   B   B   B   B  )
+                (  B   B   B   B   W   B   B   B  )
+                (  B   B   B   B   B   B   B   B  )
+                (  B   B   B   B   B   B   B   B  )
+                (  B   B   B   B  nil  B   B   B  )
+                (  B   B   B   B   B   B   B   B  )
+                (  B   B   B   B   B   B   B   B  )
+                (  B   B   B   B   B   B   B  nil )
+                )
+|#
+                '(
+                ( nil nil nil nil nil nil  W  nil )
+                ( nil nil nil nil  B   W  nil nil )
+                ( nil nil nil nil  B  nil nil nil )
+                ( nil  W   W   B   B  nil nil nil )
+                ( nil nil  B   B   B   B  nil nil )
+                ( nil nil nil  W  nil nil nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                )
+            )
+            ( player 'W )
+        )
+	    ( make-state 
+            :board board
+            :player player
+            :moves ( find-move board player )
+            :creationMove '( 4 1 )
+        )
+    )
+)
+
+( defmacro at ( board X Y )
+    `( nth ,X ( nth ,Y ,board ) )
+)
+
+( defun make-move ( position player ply )
+    ( alpha-beta
+        ( make-state
+            :board position
+            :player player
+            :moves ( find-move position player )
+            :creationMove nil
+        )
+        ply
+        #'gen-successors
+        #'evaluate
+    )
+)
+
+( defun test2 ()
+    ( let
+        (
+            s
+            move
+            ( board ( state-board ( get-start ) ) )
+            ( player 'B )
+            ( input 'y )
+        )
+        
+        ( printboard board )
+        
+        ( do ()
+            ( nil ( values ) )
+
+            ( setf s ( make-move board player 3 ) )
+            ( cond
+            
+                ( s
+                    ( setf move ( state-creationMove s ) )
+                    ( setf board ( state-board s ) )
+                    ( format t "~%~A: ~A~%" player ( mapcar #'1+ move ) )
+                    ( printboard board )
+                    
+                )
+                
+                ( t
+                    ( format t "Pass~%" )
+                )
+            )
+            
+            ( setf player ( if ( eq player 'B ) 'W 'B ) )
+            
+            ( setf input ( read ) )
+            
+        )
+        
+        #|
+        ( setf s ( make-move board 'W 3 ) )
+        ( setf move ( state-creationMove s ) )
+        ( setf board ( state-board s ) )
+        ( format t "W: ~A~%" ( mapcar #'1+ move ) )
+        ( printboard board )
+        
+        ( setf s ( make-move board 'B 3 ) )
+        ( setf move ( state-creationMove s ) )
+        ( setf board ( state-board s ) )
+        ( format t "B: ~A~%" ( mapcar #'1+ move ) )
+        ( printboard board )
+        
+        ( setf s ( make-move board 'W 3 ) )
+        ( setf move ( state-creationMove s ) )
+        ( setf board ( state-board s ) )
+        ( format t "W: ~A~%" ( mapcar #'1+ move ) )
+        ( printboard board )
+        |#
+    )
+)
+
+( defun test ( curState )
+    ( let
+        (
+            ( successors ( gen-successors curState ) )
             ( succ nil )
         )
         
@@ -141,7 +206,7 @@
         ( do ()
             ( ( not succ ) nil )
             
-            ( printBoard succ )
+            ( printBoard ( state-board succ ) )
             
             ( setf succ ( funcall successors ) )
             
@@ -152,24 +217,34 @@
     ( values )
 )
 
-( defun move-to-state ( state move ) 
-    ( let  (
+( defun move-to-state ( curState move ) 
+    ( let
+        (
             ( path ( cadr move ) )
             ( pos ( car move ) )
-            newState
-          )
+            ( other-player ( if ( eq ( state-player curState ) 'B ) 'W 'B ) )
+            newBoard
+        )
 
-        ( setf newState ( flip-tiles ( struct-board state ) path ) )
+        ( setf newBoard ( flip-tiles ( state-board curState ) path ) )
 
-        ( setf
-            ( at
-                newState 
-                ( car pos ) 
-                ( cadr pos )
-            )
-            ( struct-player state )
-        ) 
-        newState
+        ( place-coin newBoard ( state-player curState ) pos )
+
+;        ( setf
+;            ( at
+;                newBoard 
+;                ( car pos ) 
+;                ( cadr pos )
+;            )
+;            ( state-player curState )
+;        )
+        
+        ( make-state
+            :board newBoard
+            :player other-player
+            :moves ( find-move newBoard other-player )
+            :creationMove pos
+        )
     )
 )
 
@@ -182,73 +257,67 @@
 )
 |#
 
-( defun gen-successors ( state ) 
+( defun gen-successors ( curState ) 
     ( let
         (
-            ( move-lst ( find-move state ) )
+            ;( move-lst ( find-move curState ) )
             ( i -1 )
             max-i
         )
         
-        ( setf max-i ( - ( length move-lst ) 1 ) )
+        ( setf max-i ( - ( length ( state-moves curState ) ) 1 ) )
         
         ( lambda ()
             ( when ( < i max-i )
                 ( incf i )
-                ( move-to-state state ( nth i move-lst )  )
+                ( move-to-state curState ( nth i ( state-moves curState ) ) )
             )
         )
-            ; ( find-move state player )
     )
 )
 
-( defun find-move ( state )
-    ; Looping througth the rows of the state
+( defun find-move ( board player )
+    ; Looping througth the rows of the board
 	( do
 		(
 			( y 0 ( 1+ y ) )
 
-			( succ-lst nil )
-			( other-player ( if ( eq ( struct-player state ) 'W ) 'B 'W ) )
+			( move-lst nil )
+			( other-player ( if ( eq player 'B ) 'W 'B ) )
+			
+			move
 		)
-		( ( >= y 8 ) ( merge-path succ-lst ) )
-        ; Looping through the columns of the state
+		( ( >= y 8 ) ( merge-path move-lst ) )
+        ; Looping through the columns of the board
 		( do
 			(
 				( x
-					( position ( struct-player state ) ( nth y ( struct-board state ) ) )
-					( position ( struct-player state ) ( nth y ( struct-board state ) ) :start ( 1+ x ) )
+					( position player ( nth y board ) )
+					( position player ( nth y board ) :start ( 1+ x ) )
 				)
 			)
 			( ( not x ) nil )
 
-		;( setf x_coord ( position player ( nth y_coord state ) :start ( 1+ x_coord ) ) )
+;			( format t "Found piece at ~D, ~D~%" x y )
 
-		; Piece found @ state[x_coord][y_coord]
-		;( when x_coord
-
-			( format t "Found piece at ~D, ~D~%" x y )
-
-			; For each neighbor of state[i][j]
+			; For each neighbor of board[i][j]
 			( do ( ( m -1 ( 1+ m ) ) ) ( ( >= m 2 ) nil )
 			( do ( ( n -1 ( 1+ n ) ) ) ( ( >= n 2 ) nil )
 			
 			    ( when
 			        ( and
-			            ;( not ( and ( zerop m ) ( zerop n ) ) )
 			            ; Skip out-of-bounds positions
 			            ( >= ( + x m ) 0 ) ( >= ( + y n ) 0 )
 			            ; When a neighbor is the other player's piece
-			            ( eq ( at ( struct-board state ) ( + x m ) ( + y n ) ) other-player )
+			            ( eq ( at board ( + x m ) ( + y n ) ) other-player )
 		            )
 
-				    ( format t "Walked from ~D, ~D to ~D, ~D~%" x y ( + x m ) ( + y n ) )
-                    (setf err ( walk ( struct-board state ) ( + x m ) ( + y n ) m n ) )
+;				    ( format t "Walked from ~D, ~D to ~D, ~D~%" x y ( + x m ) ( + y n ) )
+                    ( setf move ( walk board ( + x m ) ( + y n ) m n ) )
 
-                    (if err 
-                        ( setf succ-lst ( cons err succ-lst ) )
+                    ( if move 
+                        ( setf move-lst ( cons move move-lst ) )
                     )
-				    ;( format t "There~%" )
 			    )
 			    
 			) )
@@ -256,10 +325,10 @@
 	)
 )
 
-( defun walk ( state x y m n )
+( defun walk ( board x y m n )
 	( do
 		(
-			( player ( at state x y ) )
+			( player ( at board x y ) )
 			( stop nil )
 			( return-pos nil )
             ( path nil)
@@ -269,28 +338,28 @@
         ( setf path ( cons ( list x y )  path ) )
         ; ( format t "Path: ~a~%" path )
 
-		( format t "Walked from ~D, ~D to " x y )
+;		( format t "Walked from ~D, ~D to " x y )
 
 		; Move current position acording to the direction
 		( setf x ( + x m ) )
 		( setf y ( + y n ) )
 
-		( format t "~D, ~D~%" x y )
+;		( format t "~D, ~D~%" x y )
 
 		( cond
 
 			; Out of bounds
 			( ( or ( < x 0 ) ( >= x 8 ) ( < y 0 ) ( >= y 8 ) )
-				( format t "Out of Bounds~%" )
+;				( format t "Out of Bounds~%" )
 				( setf stop T )
 			)
 
 			; Another of the player's pieces
-			( ( eq ( at state x y ) player ) )
+			( ( eq ( at board x y ) player ) )
 
 			; Empty spot
-			( ( not ( at state x y ) )
-				( format t "Found move at ~D, ~D~%" x y )
+			( ( not ( at board x y ) )
+;				( format t "Found move at ~D, ~D~%" x y )
 				( setf stop T )
 				( setf return-pos ( list ( list x y ) path ) )
                 ; ( format t "~a~%" return-pos )
@@ -298,7 +367,7 @@
 
 			; Other player's piece
 			( t
-				( format t "Other player's piece~%" )
+;				( format t "Other player's piece~%" )
 				( setf stop T )
 			)
 
@@ -306,12 +375,12 @@
 	)
 )
 
-( defun merge-path ( succ-lst ) 
+( defun merge-path ( moves ) 
 
     (let (
             ( return-lst nil )
             in-lst
-            ( move-lst ( copy-list succ-lst ) )
+            ( move-lst ( copy-list moves ) )
          )
         ( dolist ( move move-lst return-lst )
             ; checks if move is already in the return-lst
@@ -340,21 +409,31 @@
 )
 
 
-( defun flip-tiles ( state path ) 
+( defun flip-tiles ( board path ) 
 
     ( let (
             player
-            ( newState ( mapcar #'copy-list state ) )
+            ( newBoard ( mapcar #'copy-list board ) )
           )
 
-        ( dolist ( tile path newState ) 
-            ( setf player ( at newState ( car tile ) ( cadr tile ) ) )
+        ( dolist ( tile path newBoard ) 
+            ( setf player ( at newBoard ( car tile ) ( cadr tile ) ) )
 
             ( setf player ( if ( eq player 'W ) 'B 'W ) )
 
-            ;( setf ( nth ( car tile ) ( nth ( cadr tile ) newState ) ) player )
-            ( setf ( at newState ( car tile ) ( cadr tile ) ) player )
+            ( setf ( at newBoard ( car tile ) ( cadr tile ) ) player )
         )
+    )
+)
+
+( defun place-coin ( board player pos )
+    ( setf
+        ( at
+            board 
+            ( car pos ) 
+            ( cadr pos )
+        )
+        player
     )
 )
 
