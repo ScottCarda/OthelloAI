@@ -25,6 +25,18 @@
     )
 )
 
+( defun xyToOutput ( pos ) 
+
+    ( list ( 1+ ( cadr pos ) ) ( 1+ ( car pos ) ) )
+
+)
+
+( defun inputToXY ( pos ) 
+
+    ( list ( 1- ( cadr pos ) ) ( 1- ( car pos ) ) )
+
+)
+
 #|( defun statePrint ( curState )
     ( when ( state-p curState )
         ( printBoard ( state-board curState ) )

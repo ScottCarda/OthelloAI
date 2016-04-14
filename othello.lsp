@@ -51,9 +51,9 @@
             )    
         )
 
-        ( setf player ( if ( eq player "black" ) 'B 'W ) ) 
+        ( setf player ( if ( string= playerStart "black" ) 'B 'W ) ) 
 
-        ( printBoard ( state-board ( get-start ) ) )
+        ( wrapping-foo player )
     )
 )
 
@@ -86,6 +86,14 @@
                         ( setf newState ( move-to-state curState x ) )
                     )
                 )
+
+                ( when invalid
+                    ( format t "~a~%" 
+                        ( mapcar #'( lambda ( move ) 
+                            ( xyToOutput ( first move ) ) 
+                        ) posMoves ) 
+                    )
+                )
             )
         )
     )
@@ -99,21 +107,26 @@
             ( turns-passed 0 )
         )
         
-        ( printBoard ( state-board ( get-start ) ) )
-        
+        ( printBoard ( state-board curState ) )
+
         ( do ()
             ( ( >= turns-passed 2 ) nil )
             
             ( cond
-                ( ( eq user-player ( state-player curState ) )
+                ( ( eq user-color ( state-player curState ) )
                     ( setf curState ( player-move curState ) )
                 )
                 
                 ( t
                     ( setf curState ( make-move-state curState ply ) )
+                    ( format t "Here is my move: ~{~a ~} ~%~%" 
+                        ( xyToOutput ( state-creationMove curState ) ) 
+                    )
                 )
             )
             
+            ( printBoard ( state-board curState ) )
+
             ( if curState
                 ( setf turns-passed 0 )
                 ( incf turns-passed )
