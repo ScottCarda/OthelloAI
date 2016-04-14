@@ -51,9 +51,43 @@
             )    
         )
 
-        ( setf player if ( eq player "black" ) 'B 'W ) )
+        ( setf player ( if ( eq player "black" ) 'B 'W ) ) 
 
         ( printBoard ( state-board ( get-start ) ) )
+    )
+)
+
+( defun player-move ( curState )
+
+    ( let 
+        (
+            ( invalid t )
+            row
+            col
+            posMoves
+            newState
+        )
+        ( when
+            ( setf posMoves ( state-moves curState ) )
+            ; check until valid move
+            ( do ()
+                ; exit when valid move is entered
+                ( ( null invalid ) newState )
+                ( format t "What is your move [row col]? ")
+                ( setf row (1- ( read ) ) )
+                ( setf col (1- ( read ) ) )
+
+                ; loop through possible moves
+                ( dolist ( x posMoves )
+                    ; check if row and col match acceptable move
+                    ( when 
+                        ( and (= row ( cadr ( first x ) ) ) (= col ( car (first x ) ) ) )
+                        ( setf invalid nil )
+                        ( setf newState ( move-to-state curState x ) )
+                    )
+                )
+            )
+        )
     )
 )
 
