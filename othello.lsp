@@ -137,7 +137,7 @@
 )
 
 ( defun make-move ( position player ply )
-    ( mapcar #'1+
+    ( xyToOutput
         ( state-creationMove ( make-move-state
             ( make-state
                 :board position
