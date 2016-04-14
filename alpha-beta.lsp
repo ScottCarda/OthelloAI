@@ -11,9 +11,11 @@
     ) )
 )
 
+; Recursive function for performing the alpha-beta pruning minimax algorithm.
 ( defun minimax ( state depth alpha beta successors eval-state )
     ( let
         (
+	    
             ( get-next ( funcall successors state ) )
             succ
             best

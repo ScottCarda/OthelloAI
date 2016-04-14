@@ -51,7 +51,7 @@
             )    
         )
 
-        ( setf player if ( eq player "black" ) 'B 'W ) )
+        ( setf player ( if ( eq player "black" ) 'B 'W ) )
 
         ( printBoard ( state-board ( get-start ) ) )
     )
