@@ -29,7 +29,9 @@
 
         ( setf newBoard ( flip-tiles ( state-board curState ) path ) )
 
-        ( place-coin newBoard ( state-player curState ) pos )
+        ( if pos
+            ( place-coin newBoard ( state-player curState ) pos )
+        )
 
 ;        ( setf
 ;            ( at

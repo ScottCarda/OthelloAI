@@ -103,33 +103,58 @@
     ( let
         (
             ( ply 3 )
-            ( curState ( get-start ) )
+            ; ( curState ( get-start ) )
+            ( curState (get-sample))
             ( turns-passed 0 )
+            newState
         )
         
         ( printBoard ( state-board curState ) )
 
         ( do ()
             ( ( >= turns-passed 2 ) nil )
-            
+            ; ( format t "Player: ~a~%" (state-player curState))
             ( cond
                 ( ( eq user-color ( state-player curState ) )
-                    ( setf curState ( player-move curState ) )
+                    ( setf newState ( player-move curState ) )
+                    ( if newState 
+                        ( setf curState newState )
+                        ( setf curState ( move-to-state curState nil ) )
+                    )
                 )
                 
                 ( t
-                    ( setf curState ( make-move-state curState ply ) )
-                    ( format t "Here is my move: ~{~a ~} ~%~%" 
-                        ( xyToOutput ( state-creationMove curState ) ) 
-                    )
+                    ( setf newState ( make-move-state curState ply ) )
+                    ( cond
+                        ( newState 
+                            ( setf curState newState )
+                            ( format t "Here is my move: ~{~a ~} ~%~%" 
+                                ( xyToOutput ( state-creationMove curState ) ) 
+                            )
+                        )
+                        ( t
+                            ( setf curState ( move-to-state curState nil ) )
+                        )
+                    ) 
                 )
             )
-            
-            ( printBoard ( state-board curState ) )
 
-            ( if curState
-                ( setf turns-passed 0 )
-                ( incf turns-passed )
+            ( cond 
+                ( newState
+                    ( printBoard ( state-board curState ) )
+                    ( if ( > turns-passed 0 ) 
+                        ( format t " No possible moves. ~%~% ")
+                    )
+                    ( setf turns-passed 0 )
+
+                )
+                (t 
+                    ( incf turns-passed )
+                    ( if ( /= turns-passed 2 )
+                        ( printBoard ( state-board curState ) )
+                        ( format t "Game Over~%" )
+                    )
+                )
             )
             
         )
