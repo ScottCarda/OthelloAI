@@ -76,6 +76,7 @@
                 ( format t "What is your move [row col]? ")
                 ( setf row (1- ( read ) ) )
                 ( setf col (1- ( read ) ) )
+                ( format t "~%" )
 
                 ; loop through possible moves
                 ( dolist ( x posMoves )
@@ -99,66 +100,97 @@
     )
 )
 
-( defun wrapping-foo ( user-color )
+( defun take-turns ( user-color )
     ( let
         (
             ( ply 3 )
-            ; ( curState ( get-start ) )
-            ( curState (get-sample))
+            ( curState ( get-start ) )
+            ;( curState ( get-sample ) )
             ( turns-passed 0 )
-            newState
         )
         
+        ; Print the start state
         ( printBoard ( state-board curState ) )
 
         ( do ()
             ( ( >= turns-passed 2 ) nil )
-            ; ( format t "Player: ~a~%" (state-player curState))
+            
             ( cond
+            
+                ; Player's turn
                 ( ( eq user-color ( state-player curState ) )
-                    ( setf newState ( player-move curState ) )
-                    ( if newState 
-                        ( setf curState newState )
-                        ( setf curState ( move-to-state curState nil ) )
+                    ( cond
+                    
+                        ; If the player must pass
+                        ( ( must-pass? curState )
+                            ; Keep track of consecutive turns passed
+                            ( incf turns-passed )
+                            ; Perform a pass move ( changes whose turn it is in the state )
+                            ( setf curState ( move-to-state curState nil ) )
+                        )
+                        
+                        ; If the player can make a move
+                        ( t
+                            ; If previously the computer passed
+                            ( if ( eq turns-passed 1 )
+                                ( format t "I must pass.~%~%" )
+                            )
+                            
+                            ; Update the current state with the player's move
+                            ( setf curState ( player-move curState ) )
+                            ; Print the resulting state
+                            ( printBoard ( state-board curState ) )
+                            ; Reset number of consecutive turns passed
+                            ( setf turns-passed 0 )
+                        )
                     )
                 )
                 
+                ; Computer's turn
                 ( t
-                    ( setf newState ( make-move-state curState ply ) )
                     ( cond
-                        ( newState 
-                            ( setf curState newState )
+                    
+                        ; If the computer must pass
+                        ( ( must-pass? curState )
+                            ; Keep track of consecutive turns passed
+                            ( incf turns-passed )
+                            ; Perform a pass move ( changes whose turn it is in the state )
+                            ( setf curState ( move-to-state curState nil ) )
+                        )
+                        
+                        ; If the computer can make a move
+                        ( t
+                            ; If previously the player passed
+                            ( if ( eq turns-passed 1 )
+                                ( format t "You must pass.~%~%" )
+                            )
+                            ; Update the current state with the computer's move
+                            ( setf curState ( make-move-state curState ply ) )
+                            ; Print out the computer's move
                             ( format t "Here is my move: ~{~a ~} ~%~%" 
                                 ( xyToOutput ( state-creationMove curState ) ) 
                             )
-                        )
-                        ( t
-                            ( setf curState ( move-to-state curState nil ) )
+                            ; Print the resulting state
+                            ( printBoard ( state-board curState ) )
+                            ; Reset number of consecutive turns passed
+                            ( setf turns-passed 0 )
                         )
                     ) 
                 )
+                
             )
 
-            ( cond 
-                ( newState
-                    ( printBoard ( state-board curState ) )
-                    ( if ( > turns-passed 0 ) 
-                        ( format t " No possible moves. ~%~% ")
-                    )
-                    ( setf turns-passed 0 )
-
-                )
-                (t 
-                    ( incf turns-passed )
-                    ( if ( /= turns-passed 2 )
-                        ( printBoard ( state-board curState ) )
-                        ( format t "Game Over~%" )
-                    )
-                )
+            ; If both the players pass, its game over
+            ( if ( eq turns-passed 2 )
+                ( format t "Game Over~%" )
             )
             
         )
     )
+)
+
+( defun must-pass? ( curState )
+    ( zerop ( length ( state-moves curState ) ) )
 )
 
 ( defun make-move ( position player ply )

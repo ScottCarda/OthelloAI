@@ -30,6 +30,17 @@
     ( let
         (
             ( board
+                #|'(
+                ( nil nil nil nil nil nil nil nil )
+                ( nil nil nil nil  B  nil nil nil )
+                ( nil nil nil nil  B  nil nil nil )
+                ( nil  W   W  nil  B  nil nil nil )
+                ( nil  W   W  nil  B   B  nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                ( nil nil nil nil nil nil nil nil )
+                )|#
+            
                 '(
                 (  B   B   B   B   B   B   B   B  )
                 (  B   B   B   B   W   B   B   B  )
@@ -40,7 +51,7 @@
                 (  B   B   B   B   B   B   B   B  )
                 (  B   B   B   B   B   B   B  nil )
                 )
-                #| '(
+                #|'(
                 ( nil nil nil nil nil nil  W  nil )
                 ( nil nil nil nil  B   W  nil nil )
                 ( nil nil nil nil  B  nil nil nil )
