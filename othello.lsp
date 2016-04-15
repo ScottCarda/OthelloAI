@@ -32,12 +32,17 @@
                 )
             )
 
-            ( ( eq player 'black )
+            ( ( or ( eq player 'black ) ( eq player 'B ) )
                 ( setf playerStart "black" )
             )
 
-            ( ( eq player 'white )
+            ( ( or ( eq player 'white ) ( eq player 'W ) )
                 ( setf playerStart "white" )
+            )
+
+            ( t 
+                ( format t "Clisp Useage: ( othello [player] ) where player is either black or white. ~%" )
+                ( setf playerStart nil )
             )
         )
         
@@ -51,9 +56,11 @@
             )    
         )
 
-        ( setf player ( if ( string= playerStart "black" ) 'B 'W ) ) 
-
-        ( wrapping-foo player )
+        ; checks that valid option was entered
+        ( when ( not ( null playerStart ) ) 
+            ( setf player ( if ( string= playerStart "black" ) 'B 'W ) ) 
+            ( take-turns player )
+        )
     )
 )
 
@@ -217,11 +224,12 @@
 )
 
 ( if ( = ( length *args* ) 1 )
+    
     ( cond 
-        ( ( string-equal ( car *args* ) "black" )
+        ( ( or ( string= ( car *args* ) "black" ) ( string= ( car *args* ) "B" ) )
             ( othello 'black )
         )
-        ( ( string-equal ( car *args* ) "white" ) 
+        ( ( or ( string= ( car *args* ) "white" ) ( string= ( car *args* ) "W" ) )
             ( othello 'white )
         )
         ( t 
