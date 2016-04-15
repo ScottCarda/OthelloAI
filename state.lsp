@@ -178,19 +178,18 @@
 
 ( defun merge-path ( moves ) 
 
-    (let (
+    ( let
+        (
             ( return-lst nil )
-            in-lst
             ( move-lst ( copy-list moves ) )
-         )
+            in-lst
+        )
         ( dolist ( move move-lst return-lst )
-            ; checks if move is already in the return-lst
+            ; Checks if move is already in the return-lst
             ( setf in-lst ( car ( member move return-lst :test 
                 #'( lambda ( m1 m2 ) ( equal ( car m1 ) ( car m2 ) ) 
                   ) 
             ) ) )
-
-            ; ( format t "Return-lst: ~a~%" return-lst)
 
             ( cond 
                 ( ( null in-lst ) 
@@ -198,10 +197,7 @@
                 )
 
                 (t 
-                    ; ( format t "Before: ~a~%" ( nth 1 in-lst ) )
-                    ; ( format t "Move: ~a~%" ( nth 1 move ) ) 
                     ( setf ( nth 1 in-lst ) ( append ( nth 1 move ) ( nth 1 in-lst ) ) )
-                    ; ( format t "After: ~a~%" ( nth 1 in-lst ) )
 
                 )
             )
