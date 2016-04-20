@@ -231,7 +231,7 @@ Only returns non-nil if the end is a result of an empty position."
 			( move nil ) ; The move to return
             ( path nil) ; The path taken to the placing position
 		)
-		( stop pos )
+		( stop move )
 
         ; Add the current position to the path
         ( setf path ( cons ( list x y )  path ) )
