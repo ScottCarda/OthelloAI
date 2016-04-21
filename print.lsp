@@ -5,7 +5,7 @@ This file contains the print function to print the othello board to the
 screen, as well as functions to convert the row and column between starting
 at zero 1 starting at 1. 
 
-Authors: Allison Bodvig, Scott Carda
+Authors: Allison Bodvig
 Written Spring 2016 for CSC447/547 AI class.
 
 |#
@@ -14,7 +14,7 @@ Written Spring 2016 for CSC447/547 AI class.
 #|                             Print Board                                  |#
 #|--------------------------------------------------------------------------|#
 
-
+; prints the othello game board and the row and column numbers
 ( defun printBoard ( game )
 "Prints the othello board"
 
@@ -41,10 +41,10 @@ Written Spring 2016 for CSC447/547 AI class.
 )
 
 #|--------------------------------------------------------------------------|#
-#|                             XY To Output                                 |#
+#|                          Input and Output                                |#
 #|--------------------------------------------------------------------------|#
 
-
+; adds one to row and column
 ( defun xyToOutput ( pos ) 
 "Returns row and column with 1 added to each"
     ; add one to row and column
@@ -52,23 +52,10 @@ Written Spring 2016 for CSC447/547 AI class.
 
 )
 
-#|--------------------------------------------------------------------------|#
-#|                             Input to XY                                  |#
-#|--------------------------------------------------------------------------|#
-
+; subtracts one from row and column
 ( defun inputToXY ( pos ) 
 "Returns row and column with 1 subtracted from each"
     ; subtract one from row and column
     ( list ( 1- ( cadr pos ) ) ( 1- ( car pos ) ) )
 
 )
-
-#|( defun statePrint ( curState )
-    ( when ( state-p curState )
-        ( printBoard ( state-board curState ) )
-        ( format t "Coin:    ~D~%" ( coin curState ) )
-        ( format t "Corners: ~D~%" ( corners curState ) )
-        ( format t "Moves:   ~D~%" ( moves curState ) )
-        ;( format t "Stability: ~D~%" ( stability curState ) )
-    )
-)|#

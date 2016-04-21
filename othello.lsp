@@ -14,13 +14,14 @@ Written Spring 2016 for CSC447/547 AI class.
 ( load 'evaluations )
 ( load 'alpha-beta )
 
-( load 'test )
-
 
 #|--------------------------------------------------------------------------|#
 #|                             Othello                                      |#
 #|--------------------------------------------------------------------------|#
 
+; Takes in any arguments given by player
+; if no arguments asks player what color they want to be
+; prints statement based on what color the player is and starts the game
 ( defun othello ( &optional player )
 "Allows the user to start the program from inside clisp"
 
@@ -80,11 +81,9 @@ Written Spring 2016 for CSC447/547 AI class.
     )
 )
 
-
-#|--------------------------------------------------------------------------|#
-#|                             Player Move                                  |#
-#|--------------------------------------------------------------------------|#
-
+; Asks the player for their move and checks if it is a valid move
+; makes move and returns new state
+; prints possible moves if player inputs wrong move
 ( defun player-move ( curState )
 "Gets move from player"
     ( let 
@@ -129,10 +128,9 @@ Written Spring 2016 for CSC447/547 AI class.
     )
 )
 
-#|--------------------------------------------------------------------------|#
-#|                              Take Turns                                  |#
-#|--------------------------------------------------------------------------|#
-
+; Handles taking turns between player and computer
+; Checks if a move can be made
+; Also checks for end game and prints winner/final score
 ( defun take-turns ( user-color )
 "Takes turns between computer and player to play game"
 
@@ -140,7 +138,6 @@ Written Spring 2016 for CSC447/547 AI class.
         (
             ( ply 3 )
             ( curState ( get-start ) )
-            ; ( curState ( get-sample ) )
             ( turns-passed 0 )
             pointsB
             pointsW
@@ -221,19 +218,24 @@ Written Spring 2016 for CSC447/547 AI class.
             ; If both the players pass, its game over
             ( when ( eq turns-passed 2 )
                 ( format t "Game Over~%~%" )
+                ; set number of points for black and white
                 ( setf pointsB ( score ( state-board curState ) 'B ) )
                 ( setf pointsW ( score ( state-board curState ) 'W ) )
                 ( cond 
+                    ; if black has more points
                     ( ( > pointsB pointsW ) 
                         ( format t "Black Wins!~%" )    
                     )
+                    ; if they are equal
                     ( ( = pointsW pointsB ) 
                         ( format t "Tie Game~%" )
                     )
+                    ; otherwise white is the winner
                     ( t
                         ( format t "White Wins!~%" ) 
                     )
                 )
+                ; prints final score
                 ( format t "Final Score: Black ~a White ~a~%~%" 
                     pointsB pointsW )
             )
@@ -241,33 +243,32 @@ Written Spring 2016 for CSC447/547 AI class.
     )
 )
 
-; count number of atoms at any level in list
+; counts the number of elements for the given color
+; returns the count
 ( defun score ( L color )
+"Returns count of given player color."
     ( cond
+        ; check for empty list
         ( ( null L ) 0 )                       
+        ; check if atom
         ( ( atom L ) 
+            ; check if matches color, if so add one, else 0
             ( if ( eq color L ) 1 0 ) 
         )                       
         ( t 
+            ; total score is car + cdr of list
             ( + ( score ( car L ) color ) ( score ( cdr L ) color ) ) 
         )
     )
 )
 
-#|--------------------------------------------------------------------------|#
-#|                           Must Pass                                      |#
-#|--------------------------------------------------------------------------|#
-
+; checks if the current player can make a move
 ( defun must-pass? ( curState )
 "Retruns true/nil if there are any moves that can be made"
     ( zerop ( length ( state-moves curState ) ) )
 )
 
-
-#|--------------------------------------------------------------------------|#
-#|                             Make Move                                    |#
-#|--------------------------------------------------------------------------|#
-
+; returns best possible move based on a give pos, player and ply
 ( defun make-move ( position player ply )
 "Return best possible move"
     ; finds best move
@@ -284,10 +285,7 @@ Written Spring 2016 for CSC447/547 AI class.
     )
 )
 
-#|--------------------------------------------------------------------------|#
-#|                             Make Move State                              |#
-#|--------------------------------------------------------------------------|#
-
+; calls alpha-beta with the current state
 ( defun make-move-state ( curState ply )
 "Calls alpha-beta"    
     ( alpha-beta
@@ -297,6 +295,18 @@ Written Spring 2016 for CSC447/547 AI class.
         #'evaluate
     )
 )
+
+
+; empty init function provided for tournament play
+( defun othello-init ( ) 
+
+)
+
+
+
+#|--------------------------------------------------------------------------|#
+#|                      Command Line Input                                  |#
+#|--------------------------------------------------------------------------|#
 
 ; checks for argument from command line
 ( if ( = ( length *args* ) 1 )
