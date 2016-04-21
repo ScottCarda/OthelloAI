@@ -52,53 +52,6 @@ Written Spring 2016 for CSC447/547 AI class.
         )
     )
 )
- 
-( defun get-sample ()
-    ( let
-        (
-            ( board
-                #|'(
-                ( nil nil nil nil nil nil nil nil )
-                ( nil nil nil nil  B  nil nil nil )
-                ( nil nil nil nil  B  nil nil nil )
-                ( nil  W   W  nil  B  nil nil nil )
-                ( nil  W   W  nil  B   B  nil nil )
-                ( nil nil nil nil nil nil nil nil )
-                ( nil nil nil nil nil nil nil nil )
-                ( nil nil nil nil nil nil nil nil )
-                )|#
-            
-                '(
-                (  B   B   B   B   B   B   B   B  )
-                (  B   B   B   B   W   B   B   B  )
-                (  B   B   B   B   B   B   B   B  )
-                (  B   B   B   B   B   B   B   B  )
-                (  B   B   B   B  nil  B   B   B  )
-                (  B   B   B   B   B   B   B   B  )
-                (  B   B   B   B   B   B   B   B  )
-                (  B   B   B   B   B   B   B  nil )
-                )
-                #|'(
-                ( nil nil nil nil nil nil  W  nil )
-                ( nil nil nil nil  B   W  nil nil )
-                ( nil nil nil nil  B  nil nil nil )
-                ( nil  W   W   B   B  nil nil nil )
-                ( nil nil  B   B   B   B  nil nil )
-                ( nil nil nil  W  nil nil nil nil )
-                ( nil nil nil nil nil nil nil nil )
-                ( nil nil nil nil nil nil nil nil )
-                ) |#
-            )
-            ( player 'B )
-        )
-	    ( make-state 
-            :board board
-            :player player
-            :moves ( find-move board player )
-            :creationMove '( 4 1 )
-        )
-    )
-)
 
 #|--------------------------------------------------------------------------|#
 #|                                 At Macro                                 |#

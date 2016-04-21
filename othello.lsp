@@ -1,7 +1,32 @@
 #|
                        ***** OTHELLO.LSP *****
 
-This file contains the
+This program plays Othello using the AI technique of Alpha-Beta Minimax. The program
+begins by asking the player if they would like to go first. Then the game of Othello begins
+and the start state of the board is printed. The program will alternate turns
+between the AI and the player, each time printing out the resulting board state. On the player's
+turn, they will be prompted to enter in a board position for their move. If
+the enter an invalid position, a list of valid moves will be displayed. On
+the AI's turn, the program will use Alpha-Beta pruning to decide its move.
+The game will end when neither player can make a move. At the end of the game,
+the program will tally the number of coins each player has on the board and the
+player with more coins wins. After the game has concluded, the program will
+prompt the user if they would like to play again.
+
+The program can be started in several different ways. It may be started from
+the command-line by giving othello.lsp and the color of the player that the user
+wants to be as a command-line arguments to the clisp interpreter. It may
+also may be started by loading the othello.lsp file in the interpreter
+and calling the othello function, which has an optional argument for
+the color of the player the user wants to be. If this argument is not supplied,
+the program will promt the user for the color.
+
+This file also contains the definitions for the othello-init function, which
+was left empty for this project, and the make-move function which can be used
+in tournament play against other AIs. This function will take a board state,
+a player color, and a ply-number, which is a measure of how deeply the AI
+examines the state-space, and returns the position of the move that it thinks
+is best for that player color.
 
 Authors: Allison Bodvig, Scott Carda
 Written Spring 2016 for CSC447/547 AI class.
@@ -158,8 +183,7 @@ Written Spring 2016 for CSC447/547 AI class.
     ( let
         (
             ( ply 3 )
-            ( curState ( get-sample ) )
-            ; ( curState ( get-start ) )
+            ( curState ( get-start ) )
             ( turns-passed 0 )
             pointsB
             pointsW
@@ -335,11 +359,11 @@ Written Spring 2016 for CSC447/547 AI class.
     
     ( cond 
         ; checks if user entered black or B
-        ( ( or ( string= ( car *args* ) "black" ) ( string= ( car *args* ) "B" ) )
+        ( ( or ( string-equal ( car *args* ) "black" ) ( string= ( car *args* ) "B" ) )
             ( othello 'black )
         )
         ; checks if user entered white or W
-        ( ( or ( string= ( car *args* ) "white" ) ( string= ( car *args* ) "W" ) )
+        ( ( or ( string-equal ( car *args* ) "white" ) ( string= ( car *args* ) "W" ) )
             ( othello 'white )
         )
         ; prints command line usage
