@@ -139,8 +139,8 @@ Written Spring 2016 for CSC447/547 AI class.
     ( let
         (
             ( ply 3 )
-            ;( curState ( get-start ) )
-            ( curState ( get-sample ) )
+            ( curState ( get-start ) )
+            ; ( curState ( get-sample ) )
             ( turns-passed 0 )
             pointsB
         )
@@ -222,14 +222,14 @@ Written Spring 2016 for CSC447/547 AI class.
                 ( format t "Game Over~%~%" )
                 ( setf pointsB ( score ( state-board curState ) ) )
                 ( cond 
-                    ( ( > 32 pointsB ) 
+                    ( ( > pointsB 32 ) 
                         ( format t "Black Wins!~%" )    
                     )
                     ( ( = 32 pointsB ) 
                         ( format t "Tie Game~%" )
                     )
                     ( t
-                        ( format t "Black Wins!~%" ) 
+                        ( format t "White Wins!~%" ) 
                     )
                 )
                 ( format t "Final Score: Black ~a White ~a~%~%" 
