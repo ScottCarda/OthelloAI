@@ -143,6 +143,7 @@ Written Spring 2016 for CSC447/547 AI class.
             ; ( curState ( get-sample ) )
             ( turns-passed 0 )
             pointsB
+            pointsW
         )
         
         ; Print the start state
@@ -220,12 +221,13 @@ Written Spring 2016 for CSC447/547 AI class.
             ; If both the players pass, its game over
             ( when ( eq turns-passed 2 )
                 ( format t "Game Over~%~%" )
-                ( setf pointsB ( score ( state-board curState ) ) )
+                ( setf pointsB ( score ( state-board curState ) 'B ) )
+                ( setf pointsW ( score ( state-board curState ) 'W ) )
                 ( cond 
-                    ( ( > pointsB 32 ) 
+                    ( ( > pointsB pointsW ) 
                         ( format t "Black Wins!~%" )    
                     )
-                    ( ( = 32 pointsB ) 
+                    ( ( = pointsW pointsB ) 
                         ( format t "Tie Game~%" )
                     )
                     ( t
@@ -233,21 +235,21 @@ Written Spring 2016 for CSC447/547 AI class.
                     )
                 )
                 ( format t "Final Score: Black ~a White ~a~%~%" 
-                    pointsB ( - 64 pointsB ) )
+                    pointsB pointsW )
             )
         )
     )
 )
 
 ; count number of atoms at any level in list
-( defun score ( L )
+( defun score ( L color )
     ( cond
         ( ( null L ) 0 )                       
         ( ( atom L ) 
-            ( if ( eq 'B L ) 1 0 ) 
+            ( if ( eq color L ) 1 0 ) 
         )                       
         ( t 
-            ( + ( score ( car L ) ) ( score ( cdr L ) ) ) 
+            ( + ( score ( car L ) color ) ( score ( cdr L ) color ) ) 
         )
     )
 )
