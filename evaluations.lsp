@@ -1,3 +1,29 @@
+#|
+                       ***** EVALUATIONS.LSP *****
+
+This file contains the methods for evaluating the game state of Othello. The main
+elvaluation function is called evaluate and simply combines the values returned
+by calling the other evaluation functions. There are three methods that we use
+to evaluate a game state. The coin method counts the number of coins that each
+player has and compares the two counts. The corners method counts the number of
+corners taken by each player and compares the two counts. The moves method counts the number of
+moves available to each player and compares the two counts. All of these evaluations will give
+higher (more positive) values for states that are considered better for the current player and will
+give lower (more negative) values for states that are considered better for the player that is not the current player.
+Which player is the current player is a value that is kept on the state.
+
+The general form for the evaluation functions were found at the following website:
+https://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello/
+
+Authors: Allison Bodvig, Scott Carda
+Written Spring 2016 for CSC447/547 AI class.
+
+|#
+
+#|--------------------------------------------------------------------------|#
+#|                        Primary Evaluation Method                         |#
+#|--------------------------------------------------------------------------|#
+
 ; Game state evaluation function that combines the tree other evaluation functions.
 ( defun evaluate ( curState )
 "Game state evaluation function that combines three other evaluation functions."
@@ -7,6 +33,10 @@
         ( moves curState ) ; Number of moves available
     )
 )
+
+#|--------------------------------------------------------------------------|#
+#|                       Evaluation Heuristic Methods                       |#
+#|--------------------------------------------------------------------------|#
 
 ; Game state evaluation function based on the number of coins each player has on the board.
 ; Returns positive values for the states that favor the current player.
@@ -104,6 +134,10 @@
         
     )
 )
+
+#|--------------------------------------------------------------------------|#
+#|                        Statistic Comparison Method                       |#
+#|--------------------------------------------------------------------------|#
 
 ; Comparison function used in game state evaluation functions.
 ( defun compare-counts ( count1 count2 )
