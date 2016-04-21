@@ -24,11 +24,15 @@ Written Spring 2016 for CSC447/547 AI class.
 ; prints statement based on what color the player is and starts the game
 ( defun othello ( &optional player )
 "Allows the user to start the program from inside clisp"
-
-    ( let (
+    
+    ; loop until player doesnt want to play again
+    ( do (
             ( input nil ) 
             playerStart
+            ( again nil )
          )
+
+        ( ( eq again 'N ) ( values ) )
         ( cond 
             ; checks for no optional argument
             ( ( null player )
@@ -78,6 +82,23 @@ Written Spring 2016 for CSC447/547 AI class.
             ; starts the game
             ( take-turns player )
         )
+
+        ; reset again
+        ( setf again nil )
+
+        ; loop asking if player wants to play again and until correct response
+        ( do 
+            ()
+            ( ( or ( eq again 'Y ) ( eq again 'N ) ) )
+            ; asks if they want to play again
+            ( princ "Would you like to play again? [y/n]? " )
+            ( setf again ( read ) )
+        )
+        
+        ; resets some values
+        ( setf player nil )
+        ( setf input nil )
+
     )
 )
 
@@ -117,7 +138,7 @@ Written Spring 2016 for CSC447/547 AI class.
                 )
                 ; prints possible moves if invalid move was entered
                 ( when invalid
-                    ( format t "~a~%" 
+                    ( format t "Possible Moves: ~a~%" 
                         ( mapcar #'( lambda ( move ) 
                             ( xyToOutput ( first move ) ) 
                         ) posMoves ) 
@@ -137,7 +158,8 @@ Written Spring 2016 for CSC447/547 AI class.
     ( let
         (
             ( ply 3 )
-            ( curState ( get-start ) )
+            ( curState ( get-sample ) )
+            ; ( curState ( get-start ) )
             ( turns-passed 0 )
             pointsB
             pointsW
