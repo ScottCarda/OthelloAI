@@ -33,167 +33,201 @@ Written Spring 2016 for CSC447/547 AI class.
 
 |#
 
+#|--------------------------------------------------------------------------|#
+#|                               Files Loaded                               |#
+#|--------------------------------------------------------------------------|#
+
+
+( load 'alpha-beta )
+( load 'evaluations )
+
 ( load 'state )
+
 ( load 'generate )
 ( load 'print )
-( load 'evaluations )
-( load 'alpha-beta )
-
 
 #|--------------------------------------------------------------------------|#
-#|                             Othello                                      |#
+#|                                 Othello                                  |#
 #|--------------------------------------------------------------------------|#
 
-; Takes in any arguments given by player
-; if no arguments asks player what color they want to be
-; prints statement based on what color the player is and starts the game
+; The calling function for playing Othello agains an AI opponent.
+; Handels processing of the optional player parameter.
 ( defun othello ( &optional player )
-"Allows the user to start the program from inside clisp"
-    
-    ; loop until player doesnt want to play again
-    ( do (
-            ( input nil ) 
-            playerStart
-            ( again nil )
-         )
+"Allows the user to play games of Othello agains an AI opponent."
+    ( cond
 
-        ( ( eq again 'N ) ( values ) )
-        ( cond 
-            ; checks for no optional argument
-            ( ( null player )
-                ; asks user if they want to go first
-                ( loop while 
-                    ; loops until user enters valid option
-                    ( and ( not ( eq input 'Y ) ) ( not ( eq input 'N ) ) ) do
-                    ( princ "Would you like to move first [y/n]? " )
-                    ( setf input ( read ) )
-                )
-                ; sets the player color based on if they want to move first
-                ( if ( eq input 'Y )
-                    ( setf playerStart "black" )
-                    ( setf playerStart "white" )
-                )
-            )
-
-            ; checks if user specfies black
-            ( ( or ( eq player 'black ) ( eq player 'B ) )
-                ( setf playerStart "black" )
-            )
-            ; checks if user specfies black
-            ( ( or ( eq player 'white ) ( eq player 'W ) )
-                ( setf playerStart "white" )
-            )
-            ; prints usage statement and sets player to nil since no vaid option was entered
-            ( t 
-                ( format t "Clisp Useage: ( othello [player] ) where player is either black or white. ~%" )
-                ( setf playerStart nil )
-            )
+        ; If the optional player parameter was not given
+        ( ( null player )
+            ( repeat-game nil )
         )
         
-        ; prints info based on what color the user is
-        ( cond 
-            ( ( string= playerStart "black" )
-                ( format t "OK! You will be playing Black. When asked for your move, please enter the row and column in which you would like to place a Black stone. Remember, you must outflank at least one White stone, or forfeit your move.~%~%" )
-            )
-
-            ( ( string= playerStart "white" )
-                ( format t "OK! You will be playing White. When asked for your move, please enter the row and column in which you would like to place a White stone. Remember, you must outflank at least one Black stone, or forfeit your move.~%~%" )
-            )    
+        ; If the player parameter is black
+        ( ( or ( eq player 'black ) ( eq player 'B ) )
+            ( repeat-game 'B )
         )
 
-        ; checks that valid option was entered
-        ( when ( not ( null playerStart ) ) 
-            ( setf player ( if ( string= playerStart "black" ) 'B 'W ) ) 
-            ; starts the game
-            ( take-turns player )
+        ; If the player parameter is white
+        ( ( or ( eq player 'white ) ( eq player 'W ) )
+            ( repeat-game 'W )
         )
-
-        ; reset again
-        ( setf again nil )
-
-        ; loop asking if player wants to play again and until correct response
-        ( do 
-            ()
-            ( ( or ( eq again 'Y ) ( eq again 'N ) ) )
-            ; asks if they want to play again
-            ( princ "Would you like to play again? [y/n]? " )
-            ( setf again ( read ) )
+            
+        ; Prints usage statement
+        ( t 
+            ( format t "Clisp Useage: ( othello [player] ) where player is either black or white.~%" )
         )
         
-        ; resets some values
-        ( setf player nil )
-        ( setf input nil )
-
     )
+    ( values )
 )
 
-; Asks the player for their move and checks if it is a valid move
-; makes move and returns new state
-; prints possible moves if player inputs wrong move
-( defun player-move ( curState )
-"Gets move from player"
-    ( let 
-        (
-            ( invalid t )
-            row
-            col
-            posMoves
-            newState
-        )
-        ( when
-            ( setf posMoves ( state-moves curState ) )
-            ; check until valid move
-            ( do ()
-                ; exit when valid move is entered
-                ( ( null invalid ) newState )
-                ( format t "What is your move [row col]? ")
-                ; read in row and column
-                ( setf row (1- ( read ) ) )
-                ( setf col (1- ( read ) ) )
-                ( format t "~%" )
+#|--------------------------------------------------------------------------|#
+#|                               Game Methods                               |#
+#|--------------------------------------------------------------------------|#
 
-                ; loop through possible moves
-                ( dolist ( x posMoves )
-                    ; check if row and col match acceptable move
-                    ( when 
-                        ( and (= row ( cadr ( first x ) ) ) (= col ( car (first x ) ) ) )
-                        ( setf invalid nil )
-                        ( setf newState ( move-to-state curState x ) )
-                    )
-                )
-                ; prints possible moves if invalid move was entered
-                ( when invalid
-                    ( format t "Possible Moves: ~a~%" 
-                        ( mapcar #'( lambda ( move ) 
-                            ( xyToOutput ( first move ) ) 
-                        ) posMoves ) 
-                    )
-                )
-            )
-        )
-    )
-)
-
-; Handles taking turns between player and computer
-; Checks if a move can be made
-; Also checks for end game and prints winner/final score
-( defun take-turns ( user-color )
-"Takes turns between computer and player to play game"
+; Handels the end of game messages and final scores.
+( defun game-over ( curState )
+"Prints out the end game message along with the final scores."
 
     ( let
         (
-            ( ply 3 )
-            ( curState ( get-start ) )
-            ( turns-passed 0 )
-            pointsB
-            pointsW
+            pointsB ; End-game score for Black
+            pointsW ; End-game score for White
+        )
+        
+        ( format t "Game Over~%~%" )
+        ; Set number of points for black and white
+        ( setf pointsB ( score ( state-board curState ) 'B ) )
+        ( setf pointsW ( score ( state-board curState ) 'W ) )
+        ( cond 
+            ; If black has more points
+            ( ( > pointsB pointsW ) 
+                ( format t "Black Wins!~%" )    
+            )
+            ; If they are equal
+            ( ( = pointsW pointsB ) 
+                ( format t "Tie Game~%" )
+            )
+            ; Otherwise white is the winner
+            ( t
+                ( format t "White Wins!~%" ) 
+            )
+        )
+        ; Prints final score
+        ( format t "Final Score: Black ~a White ~a~%~%" 
+            pointsB pointsW )
+    )
+)
+
+; Checks if the current player must pass the turn.
+( defun must-pass? ( curState )
+"Retruns true if the current player has no moves to make and must pass."
+    ( zerop ( length ( state-moves curState ) ) )
+)
+
+; Determines what color the player is in each game and loops the game logic.
+( defun repeat-game ( player )
+"Loops the game logic and handles logic for things at the beginning of a game."
+    ; Repeats the game logic if the user wants to play multiple times
+    ( do
+        (
+            input ; User input for prompts
+        )
+        ( ( eq input 'N ) ( values ) )
+        
+        ; When the player's color has yet to be decided
+        ( when ( null player )
+        
+            ( setf input nil )
+            ; Loop asking if player wants to go first until correct response
+            ( do () 
+                ( ( or ( eq input 'Y ) ( eq input 'N ) ) nil )
+                ( format t "Would you like to move first [y/n]? " )
+                ( setf input ( read ) )
+            )
+            
+            ; Sets the player color based on if they want to move first
+            ( if ( eq input 'Y )
+                ( setf player 'B )
+                ( setf player 'W )
+            )
+        )
+
+        ; Prints info based on what color the user is
+        ( cond
+        
+            ; If player is black
+            ( ( eq player 'B )
+                ( format t ( concatenate 'string
+                "OK! You will be playing Black. When asked for your move, please "
+                "enter the row and column in which you would like to place a "
+                "Black stone. Remember, you must outflank at least one White "
+                "stone, or forfeit your move.~%~%" ) )
+            )
+
+            ; If player is white
+            ( ( eq player 'W )
+                ( format t ( concatenate 'string
+                "OK! You will be playing White. When asked for your move, please "
+                "enter the row and column in which you would like to place a "
+                "White stone. Remember, you must outflank at least one Black "
+                "stone, or forfeit your move.~%~%" ) )
+            )
+            
+        )
+        
+        ;( setf player ( if ( string= player "black" ) 'B 'W ) )
+        ; Player's start taking turns
+        ( take-turns player )
+        ; Clear player for next game
+        ( setf player nil )
+        
+        ( setf input nil )
+        ; Loop asking if player wants to play again and until correct response
+        ( do ()
+            ( ( or ( eq input 'Y ) ( eq input 'N ) ) nil )
+            ( format t "Would you like to play again? [y/n]? " )
+            ( setf input ( read ) )
+        )
+    )
+)
+
+; Counts the number of coins for the given color.
+; Returns the count.
+( defun score ( L color )
+"Returns the number of coins on the board owned by the given color."
+    ( cond
+        ; Check for empty list
+        ( ( null L ) 0 )                       
+        ; Check if atom
+        ( ( atom L ) 
+            ; Check if matches color, if so add one, else 0
+            ( if ( eq color L ) 1 0 ) 
+        )                       
+        ( t 
+            ; Total score is car + cdr of list
+            ( + ( score ( car L ) color ) ( score ( cdr L ) color ) ) 
+        )
+    )
+)
+
+; Handles taking turns between player and computer.
+; Also checks for end game and prints winner/final score.
+( defun take-turns ( user-color )
+"Takes turns between computer and player to play the game."
+
+    ( let
+        (
+            ( ply 3 ) ; The depth into the state space the AI considers, hard-coded
+            ( curState ( get-start ) ) ; The game state
+            ( turns-passed 0 ) ; The number of turns passed in succession
         )
         
         ; Print the start state
         ( printBoard ( state-board curState ) )
 
+        ; Turn loop
         ( do ()
-            ; loops until both players cannot make a move
+            ; Loops until both players cannot make a move
             ( ( >= turns-passed 2 ) nil )
             
             ( cond
@@ -246,7 +280,7 @@ Written Spring 2016 for CSC447/547 AI class.
                                 ( format t "You must pass.~%~%" )
                             )
                             ; Update the current state with the computer's move
-                            ( setf curState ( make-move-state curState ply ) )
+                            ( setf curState ( computer-move curState ply ) )
                             ; Print out the computer's move
                             ( format t "Here is my move: ~{~a ~} ~%~%" 
                                 ( xyToOutput ( state-creationMove curState ) ) 
@@ -263,77 +297,20 @@ Written Spring 2016 for CSC447/547 AI class.
 
             ; If both the players pass, its game over
             ( when ( eq turns-passed 2 )
-                ( format t "Game Over~%~%" )
-                ; set number of points for black and white
-                ( setf pointsB ( score ( state-board curState ) 'B ) )
-                ( setf pointsW ( score ( state-board curState ) 'W ) )
-                ( cond 
-                    ; if black has more points
-                    ( ( > pointsB pointsW ) 
-                        ( format t "Black Wins!~%" )    
-                    )
-                    ; if they are equal
-                    ( ( = pointsW pointsB ) 
-                        ( format t "Tie Game~%" )
-                    )
-                    ; otherwise white is the winner
-                    ( t
-                        ( format t "White Wins!~%" ) 
-                    )
-                )
-                ; prints final score
-                ( format t "Final Score: Black ~a White ~a~%~%" 
-                    pointsB pointsW )
+                ( game-over curState )
             )
         )
     )
 )
 
-; counts the number of elements for the given color
-; returns the count
-( defun score ( L color )
-"Returns count of given player color."
-    ( cond
-        ; check for empty list
-        ( ( null L ) 0 )                       
-        ; check if atom
-        ( ( atom L ) 
-            ; check if matches color, if so add one, else 0
-            ( if ( eq color L ) 1 0 ) 
-        )                       
-        ( t 
-            ; total score is car + cdr of list
-            ( + ( score ( car L ) color ) ( score ( cdr L ) color ) ) 
-        )
-    )
-)
+#|--------------------------------------------------------------------------|#
+#|                               Turn Methods                               |#
+#|--------------------------------------------------------------------------|#
 
-; checks if the current player can make a move
-( defun must-pass? ( curState )
-"Retruns true/nil if there are any moves that can be made"
-    ( zerop ( length ( state-moves curState ) ) )
-)
-
-; returns best possible move based on a give pos, player and ply
-( defun make-move ( position player ply )
-"Return best possible move"
-    ; finds best move
-    ( xyToOutput
-        ( state-creationMove ( make-move-state
-            ( make-state
-                :board position
-                :player player
-                :moves ( find-move position player )
-                :creationMove nil
-            )
-            ply
-        ) )
-    )
-)
-
-; calls alpha-beta with the current state
-( defun make-move-state ( curState ply )
-"Calls alpha-beta"    
+; Represents the actions of a computer's turn.
+; Calls alpha-beta with the current state.
+( defun computer-move ( curState ply )
+"Calls alpha-beta to produce new game state."
     ( alpha-beta
         curState
         ply
@@ -342,31 +319,159 @@ Written Spring 2016 for CSC447/547 AI class.
     )
 )
 
+; Asks the player for their move and checks if it is a valid move.
+; Makes move and returns new state.
+; Prints possible moves if player inputs wrong move.
+( defun player-move ( curState )
+"Performs a move by prompting the user for a position. Returns the resulting state."
+    ( let 
+        (
+            ( invalid t ) ; Boolean for if the entered move is invalid
+            row ; The entered row of a move
+            col ; The entered column of a move
+            posMoves ; List of possible moves to make
+            newState ; The game state created by the entered move
+        )
+        
+        ; Prompt the user for a move only if there are moves to be made
+        ( when ( setf posMoves ( state-moves curState ) )
+            
+            ; Check until valid move
+            ( do ()
+                ; Exit when valid move is entered
+                ( ( null invalid ) newState )
+                
+                ( format t "What is your move [row col]? " )
+                ; Read in row and column
+                ( setf row ( 1- ( read ) ) )
+                ( setf col ( 1- ( read ) ) )
+                ( format t "~%" )
 
-; empty init function provided for tournament play
-( defun othello-init ( ) 
+                ; Loop through possible moves
+                ( dolist ( x posMoves )
+                    ; Check if row and col match acceptable move
+                    ( when 
+                        ( and ( = row ( cadr ( first x ) ) ) ( = col ( car ( first x ) ) ) )
+                        ( setf invalid nil )
+                        ( setf newState ( move-to-state curState x ) )
+                    )
+                )
+                ; Prints possible moves if invalid move was entered
+                ( when invalid
+                    ( format t "Possible Moves:~%~{~{~a ~}~%~}~%" 
+                        ( mapcar #'( lambda ( move ) 
+                            ( xyToOutput ( first move ) ) 
+                        ) posMoves ) 
+                    )
+                )
+            )
+        )
+    )
+)
+
+#|--------------------------------------------------------------------------|#
+#|                            Tournament Methods                            |#
+#|--------------------------------------------------------------------------|#
+
+; Converts a board as a one dimensional list of elements to a board as
+; a list of rows, each row being a list containing the elements of the row.
+( defun convert-board ( board )
+"Converts expected board format to the format used by this program."
+
+    ; Replace all characters that are not W or B with NIL
+    ( setf board
+        ( mapcar
+            #'( lambda ( elem )
+                ( if ( or ( eq elem 'W ) ( eq elem 'B ) )
+                    elem
+                    nil
+                )
+            )
+            board
+        )
+    )
+
+    ; Partition board into list of rows
+    ; Loop through each row of the board
+    ( do
+        (
+            ( i 0 ( + 8 i ) ) ; Loop variable
+            ( new-board nil ) ; The board as a list of rows
+        )
+        ; Stop when all the rows have been processed
+        ( ( >= i ( length board ) ) new-board )
+        
+        ; Add the row to the end of the new board
+        ( setf new-board
+            ( append
+                new-board
+                ; The row as a list
+                ( list ( subseq board i ( + 8 i ) ) )
+            )
+        )
+    )
+)
+
+; Returns best possible move based on a give position, player and ply.
+; The position is expected to be a one-dimensional list of elements
+; of the board in row-major order.
+( defun make-move ( position player ply )
+"Return best possible move."
+    ( let
+        (
+            ; Convert the expected format to the format
+            ; use in this program
+            ( board ( convert-board position ) )
+            curState ; The current game state
+        )
+        
+        ; Create a state based on the arguments
+        ( setf curState
+            ( make-state
+                :board board
+                :player player
+                :moves ( find-move board player )
+                :creationMove nil
+            )
+        )
+        
+        ; Return nil if you must pass
+        ( unless ( must-pass? curState )
+        
+            ; Finds best move
+            ( xyToOutput
+                ( state-creationMove ( computer-move
+                    curState
+                    ply
+                ) )
+            )
+        
+        )
+    )
+)
+
+; Empty init function provided for tournament play.
+( defun othello-init ( )
 
 )
 
-
-
 #|--------------------------------------------------------------------------|#
-#|                      Command Line Input                                  |#
+#|                            Command Line Input                            |#
 #|--------------------------------------------------------------------------|#
 
-; checks for argument from command line
+; Checks for argument from command line
 ( if ( = ( length *args* ) 1 )
     
     ( cond 
-        ; checks if user entered black or B
-        ( ( or ( string-equal ( car *args* ) "black" ) ( string= ( car *args* ) "B" ) )
-            ( othello 'black )
+        ; Checks if user entered black or B
+        ( ( or ( string-equal ( car *args* ) "black" ) ( string-equal ( car *args* ) "B" ) )
+            ( othello 'B )
         )
-        ; checks if user entered white or W
-        ( ( or ( string-equal ( car *args* ) "white" ) ( string= ( car *args* ) "W" ) )
-            ( othello 'white )
+        ; Checks if user entered white or W
+        ( ( or ( string-equal ( car *args* ) "white" ) ( string-equal ( car *args* ) "W" ) )
+            ( othello 'W )
         )
-        ; prints command line usage
+        ; Prints command line usage
         ( t 
             (format t "Command Line Usage: clisp othello.lsp player (black or white)~%")
         )
